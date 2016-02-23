@@ -7,7 +7,6 @@ import time
 import platform
 import codebase_2 as codebase
 import select
-from OpenSSL import SSL
 bind_ip = "0.0.0.0"
 bind_port = 80
 root_path = ""
@@ -23,11 +22,8 @@ else:
     page_code = sys.getdefaultencoding()
 page_template = '<html><head><meta http-equiv="Content-Type" \
 content="text/html; charset=' + page_code + '"/><title>TinyServer</title>\
-<style>a{{font-size:12pt}}</style></head><body><table><tr><td>{0}</td></tr></table></body></html>';
-ctx = SSL.Context(SSL.SSLv23_METHOD)
+<style>a{{font-size:12pt}}</style></head><body><table><tr><td>{0}</td></tr></table></body></html>'
 fpem = './server.pem'
-ctx.use_privatekey_file (fpem)
-ctx.use_certificate_file(fpem)
 def w2l(path):
     global root_path
     return root_path + path
@@ -127,6 +123,7 @@ def post_exit():
 def main():
     global root_path,bind_ip,bind_port
     is_exit = False
+    is_https = False
     for arg in sys.argv[1:]:
         if arg.startswith("root:"):
             root_path = arg[5:]
@@ -136,6 +133,11 @@ def main():
             bind_ip = arg[3:]
         elif arg == "exit":
             is_exit = True
+        elif arg == "https":
+            if not os.path.exists(fpem):
+                print "not exists file:",fpem
+                exit(-1)
+            is_https = True
         else:
             print "bad parameter:",arg
             exit(-1)
@@ -143,7 +145,14 @@ def main():
         post_exit()
         exit(0)
     tp = codebase.ThreadPool(http_proc,128)
-    server_sock = SSL.Connection(ctx,socket.socket(socket.AF_INET,socket.SOCK_STREAM))
+    if is_https:
+        from OpenSSL import SSL
+        ctx = SSL.Context(SSL.SSLv23_METHOD)
+        ctx.use_privatekey_file (fpem)
+        ctx.use_certificate_file(fpem)
+        server_sock = SSL.Connection(ctx,socket.socket(socket.AF_INET,socket.SOCK_STREAM))
+    else:
+        server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     server_sock.bind((bind_ip,bind_port))
     signal_sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     signal_sock.bind((bind_ip,bind_port))
