@@ -7,6 +7,7 @@ import time
 import platform
 import codebase_2 as codebase
 import select
+from OpenSSL import SSL
 bind_ip = "0.0.0.0"
 bind_port = 80
 root_path = ""
@@ -23,6 +24,10 @@ else:
 page_template = '<html><head><meta http-equiv="Content-Type" \
 content="text/html; charset=' + page_code + '"/><title>TinyServer</title>\
 <style>a{{font-size:12pt}}</style></head><body><table><tr><td>{0}</td></tr></table></body></html>';
+ctx = SSL.Context(SSL.SSLv23_METHOD)
+fpem = './server.pem'
+ctx.use_privatekey_file (fpem)
+ctx.use_certificate_file(fpem)
 def w2l(path):
     global root_path
     return root_path + path
@@ -138,7 +143,7 @@ def main():
         post_exit()
         exit(0)
     tp = codebase.ThreadPool(http_proc,128)
-    server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    server_sock = SSL.Connection(ctx,socket.socket(socket.AF_INET,socket.SOCK_STREAM))
     server_sock.bind((bind_ip,bind_port))
     signal_sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     signal_sock.bind((bind_ip,bind_port))
