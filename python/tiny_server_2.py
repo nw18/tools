@@ -10,11 +10,13 @@ import select
 bind_ip = "0.0.0.0"
 bind_port = 80
 root_path = ""
+mime_config = "./mime.conf"
+mime_map = {"":"application/octet-stream"}
 cur_lock = thread.allocate_lock()
 res_bad_request = "HTTP/1.1 500 Bad Requect\r\n\r\n"
 res_not_found = "HTTP/1.1 404 Not Found\r\nContent-type: text/html\r\n\r\n"; 
 res_ok = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n"
-res_file_ok = "HTTP/1.1 200 OK\r\nContent-type: */*\r\nContent-Length: {0}\r\n\r\n"
+res_file_ok = "HTTP/1.1 200 OK\r\nContent-type: {1}\r\nContent-Length: {0}\r\n\r\n"
 res_redirect = "HTTP/1.1 301 Moved Permanently\r\nContent-type: text/html\r\nLocation: {0}\r\n\r\n"
 if sys.getdefaultencoding() == 'ascii':
     page_code = 'gb2312'
@@ -24,12 +26,30 @@ page_template = '<html><head><meta http-equiv="Content-Type" \
 content="text/html; charset=' + page_code + '"/><title>TinyServer</title>\
 <style>a{{font-size:12pt}}</style></head><body><table><tr><td>{0}</td></tr></table></body></html>'
 fpem = './server.pem'
+def load_mime():
+    global mime_map
+    if not os.path.exists(mime_config):
+        return
+    f = open(mime_config,"r")
+    for line in f:
+        fields = line.split(":")
+        if len(fields) != 2 or fields[1] == "":
+            break
+        mime_map[fields[0]] = fields[1]
+    f.close()
 def w2l(path):
     global root_path
     return root_path + path
 def send_file(path,conn):
     file_size = os.path.getsize(w2l(path))
-    conn.send(res_file_ok.format(file_size))
+    pos = path.rfind(".")
+    file_ext = ""
+    mime_name = "application/octet-stream"
+    if pos > 0:
+        file_ext = path[pos+1:]
+    if file_ext in mime_map:
+        mime_name = mime_map[file_ext]
+    conn.send(res_file_ok.format(file_size,mime_map))
     f = open(w2l(path),"rb")
     print path,file_size
     sz_read = 0
@@ -71,9 +91,13 @@ def list_dir(path,conn):
                 file_size = ''
             else:
                 file_size = str(os.path.getsize(lsp))
+            file_info = ['<a href="' + urllib.quote(path + sp)+ '">' +sp+ '</a>',file_size,file_ctime,file_mtime]
+            if file_size == "":
+                out_list.append(file_info)
+            else:
+                out_list2.append(file_info)
         except Exception , e:
             continue
-        out_list2.append(['<a href="' + urllib.quote(path + sp)+ '">' +sp+ '</a>',file_size,file_ctime,file_mtime])
     out_list.extend(out_list2)
     for i in range(0,len(out_list)):
         out_list[i] = '&nbsp;&nbsp;</td><td>'.join(out_list[i])
@@ -144,6 +168,7 @@ def main():
     if is_exit:
         post_exit()
         exit(0)
+    load_mime()
     tp = codebase.ThreadPool(http_proc,128)
     if is_https:
         from OpenSSL import SSL
