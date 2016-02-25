@@ -7,25 +7,57 @@ import time
 import platform
 import codebase_2 as codebase
 import select
+#config files
+mime_config = "./mime.conf"
+fpem = './server.pem'
+#parameters [port:8080] [root:/home] [ip:192.169.0.1] https
 bind_ip = "0.0.0.0"
 bind_port = 80
 root_path = ""
-mime_config = "./mime.conf"
+is_https = False
+page_code = "utf-8"
+#global variant
 mime_map = {"":"application/octet-stream"}
 cur_lock = thread.allocate_lock()
+#response string
 res_bad_request = "HTTP/1.1 500 Bad Requect\r\n\r\n"
 res_not_found = "HTTP/1.1 404 Not Found\r\nContent-type: text/html\r\n\r\n"; 
 res_ok = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n"
 res_file_ok = "HTTP/1.1 200 OK\r\nContent-type: {1}\r\nContent-Length: {0}\r\n\r\n"
 res_redirect = "HTTP/1.1 301 Moved Permanently\r\nContent-type: text/html\r\nLocation: {0}\r\n\r\n"
-if sys.getdefaultencoding() == 'ascii':
-    page_code = 'gb2312'
-else:
-    page_code = sys.getdefaultencoding()
+#page template
 page_template = '<html><head><meta http-equiv="Content-Type" \
 content="text/html; charset=' + page_code + '"/><title>TinyServer</title>\
 <style>a{{font-size:12pt}}</style></head><body><table><tr><td>{0}</td></tr></table></body></html>'
-fpem = './server.pem'
+def pase_param():
+    global is_https
+    is_exit = False
+    for arg in sys.argv[1:]:
+        if arg.startswith("root:"):
+            root_path = arg[5:]
+        elif arg.startswith("port:"):
+            bind_port = int(arg[5:])
+        elif arg.startswith("ip:"):
+            bind_ip = arg[3:]
+        elif arg == "exit":
+            is_exit = True
+        elif arg == "https":
+            if not os.path.exists(fpem):
+                print "not exists file:",fpem
+                exit(-1)
+            is_https = True
+        else:
+            print "bad parameter:",arg
+            exit(-1)
+    if is_exit:
+        post_exit()
+        exit(0)
+def init_code():
+    global page_code
+    if sys.getdefaultencoding() == 'ascii':
+        page_code = 'gb2312'
+    else:
+        page_code = sys.getdefaultencoding()
 def load_mime():
     global mime_map
     if not os.path.exists(mime_config):
@@ -75,7 +107,7 @@ def list_dir(path,conn):
         ppath = ppath[0:pos]
         if ppath == "":
             ppath = "/"
-        out_list.append(['<a href="' + urllib.quote(ppath)+ '">[Parent Directory]</a>','[Size]','[Create Time]','[Modify Time]'])
+        out_list.append(['<a href="' + urllib.quote(ppath)+ '">[Parent Directory]</a>','[Size]','[Create]','[Modify]'])
     if not path.endswith("/"):
         path += "/"
     try:
@@ -146,28 +178,8 @@ def post_exit():
     s.close()
 def main():
     global root_path,bind_ip,bind_port
-    is_exit = False
-    is_https = False
-    for arg in sys.argv[1:]:
-        if arg.startswith("root:"):
-            root_path = arg[5:]
-        elif arg.startswith("port:"):
-            bind_port = int(arg[5:])
-        elif arg.startswith("ip:"):
-            bind_ip = arg[3:]
-        elif arg == "exit":
-            is_exit = True
-        elif arg == "https":
-            if not os.path.exists(fpem):
-                print "not exists file:",fpem
-                exit(-1)
-            is_https = True
-        else:
-            print "bad parameter:",arg
-            exit(-1)
-    if is_exit:
-        post_exit()
-        exit(0)
+    pase_param()
+    init_code()
     load_mime()
     tp = codebase.ThreadPool(http_proc,128)
     if is_https:
