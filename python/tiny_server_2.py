@@ -30,7 +30,7 @@ page_template = '<html><head><meta http-equiv="Content-Type" \
 content="text/html; charset=' + page_code + '"/><title>TinyServer</title>\
 <style>a{{font-size:12pt}}</style></head><body><table><tr><td>{0}</td></tr></table></body></html>'
 def pase_param():
-    global is_https
+    global is_https,bind_port,bind_ip,root_path,is_https
     is_exit = False
     for arg in sys.argv[1:]:
         if arg.startswith("root:"):
