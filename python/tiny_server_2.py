@@ -23,7 +23,7 @@ cur_lock = thread.allocate_lock()
 res_bad_request = "HTTP/1.1 500 Bad Requect\r\n\r\n"
 res_not_found = "HTTP/1.1 404 Not Found\r\nContent-type: text/html\r\n\r\n"; 
 res_ok = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n"
-res_file_ok = "HTTP/1.1 200 OK\r\nContent-type: {1}\r\nContent-Length: {0}\r\n\r\n"
+res_file_ok = "HTTP/1.1 200 OK\r\nContent-Length: {0}\r\nContent-type: {1}\r\n\r\n"
 res_redirect = "HTTP/1.1 301 Moved Permanently\r\nContent-type: text/html\r\nLocation: {0}\r\n\r\n"
 #page template
 page_template = '<html><head><meta http-equiv="Content-Type" \
@@ -81,7 +81,7 @@ def send_file(path,conn):
         file_ext = path[pos+1:]
     if file_ext in mime_map:
         mime_name = mime_map[file_ext]
-    conn.send(res_file_ok.format(file_size,mime_map))
+    conn.send(res_file_ok.format(file_size,mime_name))
     f = open(w2l(path),"rb")
     print path,file_size
     sz_read = 0
