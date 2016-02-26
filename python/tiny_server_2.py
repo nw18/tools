@@ -8,17 +8,16 @@ import platform
 import codebase_2 as codebase
 import select
 #config files
-mime_config = "./mime.conf"
-fpem = './server.pem'
+config = {}
+config["mime"] = "./mime.conf"
+config["pem_file"] = "./server.pem"
 #parameters [port:8080] [root:/home] [ip:192.169.0.1] https
-bind_ip = "0.0.0.0"
-bind_port = 80
-root_path = ""
-is_https = False
-page_code = "utf-8"
+config["bind_ip"] = "0.0.0.0"
+config["bind_port"] = "80"
+config["root_path"] = ""
+config["is_https"] = False
 #global variant
 mime_map = {"":"application/octet-stream"}
-cur_lock = thread.allocate_lock()
 #response string
 res_bad_request = "HTTP/1.1 500 Bad Requect\r\n\r\n"
 res_not_found = "HTTP/1.1 404 Not Found\r\nContent-type: text/html\r\n\r\n"; 
@@ -26,43 +25,48 @@ res_ok = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n"
 res_file_ok = "HTTP/1.1 200 OK\r\nContent-Length: {0}\r\nContent-type: {1}\r\n\r\n"
 res_redirect = "HTTP/1.1 301 Moved Permanently\r\nContent-type: text/html\r\nLocation: {0}\r\n\r\n"
 #page template
-page_template = '<html><head><meta http-equiv="Content-Type" \
-content="text/html; charset=' + page_code + '"/><title>TinyServer</title>\
-<style>a{{font-size:12pt}}</style></head><body><table><tr><td>{0}</td></tr></table></body></html>'
+page_template = ""
+def init_code():
+	global page_template
+	page_code = "utf-8"
+    if sys.getdefaultencoding() == 'ascii':
+        page_code = 'gb2312'
+    else:
+        page_code = sys.getdefaultencoding()
+	page_template = '<html>\
+	<head>\
+	<meta http-equiv="Content-Type" content="text/html; charset=' + page_code + '"/>\
+	<title>TinyServer</title>\
+	<style>a{{font-size:12pt}}</style></head>\
+	<body><table><tr><td>{0}</td></tr></table></body></html>'
 def pase_param():
-    global is_https,bind_port,bind_ip,root_path,is_https
+    global config
     is_exit = False
     for arg in sys.argv[1:]:
         if arg.startswith("root:"):
-            root_path = arg[5:]
+            config["root_path"] = arg[5:]
         elif arg.startswith("port:"):
-            bind_port = int(arg[5:])
+            config["bind_port"] = int(arg[5:])
         elif arg.startswith("ip:"):
-            bind_ip = arg[3:]
+            config["bind_ip"] = arg[3:]
         elif arg == "exit":
             is_exit = True
         elif arg == "https":
-            if not os.path.exists(fpem):
-                print "not exists file:",fpem
+            if not os.path.exists(config["pem_file"]):
+                print "not exists file:",config["pem_file"]
                 exit(-1)
-            is_https = True
+            config["is_https"] = True
         else:
             print "bad parameter:",arg
             exit(-1)
     if is_exit:
         post_exit()
         exit(0)
-def init_code():
-    global page_code
-    if sys.getdefaultencoding() == 'ascii':
-        page_code = 'gb2312'
-    else:
-        page_code = sys.getdefaultencoding()
 def load_mime():
     global mime_map
-    if not os.path.exists(mime_config):
+    if not os.path.exists(config["mime"]):
         return
-    f = open(mime_config,"r")
+    f = open(config["mime"],"r")
     for line in f:
         fields = line.split(":")
         if len(fields) != 2 or fields[1] == "":
@@ -70,10 +74,9 @@ def load_mime():
         mime_map[fields[0]] = fields[1].strip(" \r\n")
     f.close()
 def w2l(path):
-    global root_path
-    return root_path + path
-def send_file(path,conn):
-    file_size = os.path.getsize(w2l(path))
+    return config["root_path"] + path
+def send_head(path,conn):
+	file_size = os.path.getsize(w2l(path))
     pos = path.rfind(".")
     file_ext = ""
     mime_name = "application/octet-stream"
@@ -82,6 +85,9 @@ def send_file(path,conn):
     if file_ext in mime_map:
         mime_name = mime_map[file_ext]
     conn.send(res_file_ok.format(file_size,mime_name))
+    return file_size
+def send_file(path,conn):
+    file_size = send_head(path,conn)
     f = open(w2l(path),"rb")
     print path,file_size
     sz_read = 0
@@ -174,25 +180,24 @@ def http_proc(conn,addr):
         conn.close()
 def post_exit():
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    s.sendto("exit",("127.0.0.1",bind_port))
+    s.sendto("exit",("127.0.0.1",config["bind_port"]))
     s.close()
 def main():
-    global root_path,bind_ip,bind_port
     pase_param()
     init_code()
     load_mime()
     tp = codebase.ThreadPool(http_proc,128)
-    if is_https:
+    if config["is_https"]:
         from OpenSSL import SSL
         ctx = SSL.Context(SSL.SSLv23_METHOD)
-        ctx.use_privatekey_file (fpem)
-        ctx.use_certificate_file(fpem)
+        ctx.use_privatekey_file (config["pem_file"])
+        ctx.use_certificate_file(config["pem_file"])
         server_sock = SSL.Connection(ctx,socket.socket(socket.AF_INET,socket.SOCK_STREAM))
     else:
         server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    server_sock.bind((bind_ip,bind_port))
+    server_sock.bind((config["bind_ip"],config["bind_port"]))
     signal_sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    signal_sock.bind((bind_ip,bind_port))
+    signal_sock.bind((config["bind_ip"],config["bind_port"]))
     server_sock.listen(5)
     def do_exit():
         print "about to exit."
