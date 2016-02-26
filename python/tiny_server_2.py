@@ -81,7 +81,10 @@ def send_file(path,conn):
         file_ext = path[pos+1:]
     if file_ext in mime_map:
         mime_name = mime_map[file_ext]
-    conn.send(res_file_ok.format(file_size,mime_name))
+    if mime_name == "text/html":
+        conn.send(res_ok)
+    else:
+        conn.send(res_file_ok.format(file_size,mime_name))
     f = open(w2l(path),"rb")
     print path,file_size
     sz_read = 0
