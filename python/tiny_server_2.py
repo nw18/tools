@@ -67,7 +67,7 @@ def load_mime():
         fields = line.split(":")
         if len(fields) != 2 or fields[1] == "":
             break
-        mime_map[fields[0]] = fields[1]
+        mime_map[fields[0]] = fields[1].strip(" \r\n")
     f.close()
 def w2l(path):
     global root_path
@@ -81,10 +81,7 @@ def send_file(path,conn):
         file_ext = path[pos+1:]
     if file_ext in mime_map:
         mime_name = mime_map[file_ext]
-    if mime_name == "text/html":
-        conn.send(res_ok)
-    else:
-        conn.send(res_file_ok.format(file_size,mime_name))
+    conn.send(res_file_ok.format(file_size,mime_name))
     f = open(w2l(path),"rb")
     print path,file_size
     sz_read = 0
