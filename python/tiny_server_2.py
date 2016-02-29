@@ -13,9 +13,11 @@ config["mime"] = "./mime.conf"
 config["pem_file"] = "./server.pem"
 #parameters [port:8080] [root:/home] [ip:192.169.0.1] https
 config["bind_ip"] = "0.0.0.0"
-config["bind_port"] = "80"
+config["bind_port"] = 80
 config["root_path"] = ""
 config["is_https"] = False
+config["web"] = "./web"
+web_spec_path = "/__web__"
 #global variant
 mime_map = {"":"application/octet-stream"}
 #response string
@@ -27,13 +29,13 @@ res_redirect = "HTTP/1.1 301 Moved Permanently\r\nContent-type: text/html\r\nLoc
 #page template
 page_template = ""
 def init_code():
-	global page_template
-	page_code = "utf-8"
-    if sys.getdefaultencoding() == 'ascii':
-        page_code = 'gb2312'
+    global page_template
+    page_code = "utf-8"
+    if sys.getdefaultencoding() == "ascii":
+        page_code = "gb2312"
     else:
         page_code = sys.getdefaultencoding()
-	page_template = '<html>\
+    page_template = '<html>\
 	<head>\
 	<meta http-equiv="Content-Type" content="text/html; charset=' + page_code + '"/>\
 	<title>TinyServer</title>\
@@ -49,6 +51,11 @@ def pase_param():
             config["bind_port"] = int(arg[5:])
         elif arg.startswith("ip:"):
             config["bind_ip"] = arg[3:]
+        elif arg.startswith("web:"):
+            config["web"] = arg[4:]
+            if not os.path.isdir(config["web"]):
+                print "bad path:",config["web"]
+                exit(-1)
         elif arg == "exit":
             is_exit = True
         elif arg == "https":
@@ -75,20 +82,20 @@ def load_mime():
     f.close()
 def w2l(path):
     return config["root_path"] + path
-def send_head(path,conn):
-	file_size = os.path.getsize(w2l(path))
+def send_head(lpath,path,conn):
+    file_size = os.path.getsize(lpath)
     pos = path.rfind(".")
     file_ext = ""
     mime_name = "application/octet-stream"
     if pos > 0:
-        file_ext = path[pos+1:]
+        file_ext = path[pos+1:].lower()
     if file_ext in mime_map:
         mime_name = mime_map[file_ext]
     conn.send(res_file_ok.format(file_size,mime_name))
     return file_size
-def send_file(path,conn):
-    file_size = send_head(path,conn)
-    f = open(w2l(path),"rb")
+def send_file(lpath,path,conn):
+    file_size = send_head(lpath,path,conn)
+    f = open(lpath,"rb")
     print path,file_size
     sz_read = 0
     try:
@@ -104,7 +111,7 @@ def send_file(path,conn):
         print "sume read:",sz_read
         f.close()
 
-def list_dir(path,conn):
+def list_dir(lpath,path,conn):
     ppath = path
     pos = ppath.rfind("/")
     out_list = []
@@ -116,12 +123,14 @@ def list_dir(path,conn):
         out_list.append(['<a href="' + urllib.quote(ppath)+ '">[Parent Directory]</a>','[Size]','[Create]','[Modify]'])
     if not path.endswith("/"):
         path += "/"
+    if not lpath.endswith("/"):
+        lpath += "/"
     try:
-        dir_list = os.listdir(w2l(path))
+        dir_list = os.listdir(lpath)
     except Exception , e:
         dir_list = []
     for sp in sorted(dir_list):
-        lsp = w2l(path + sp)
+        lsp = lpath + sp
         try:
             file_ctime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(lsp)))
             file_mtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime(lsp)))
@@ -141,12 +150,21 @@ def list_dir(path,conn):
         out_list[i] = '&nbsp;&nbsp;</td><td>'.join(out_list[i])
     conn.send(res_ok)
     conn.send(page_template.format('</td></tr><tr><td>'.join(out_list)))
-              
-def  do_get(path,conn):
-    if os.path.isdir(w2l(path)):
-        list_dir(path,conn)
+def do_web(path,comm,params):
+    pass
+def do_get(path,conn,params):
+    if path.startswith(web_spec_path):
+        do_web(path,conn,params)
+        return
+    lpath = w2l(path)
+    if not os.path.exists(lpath):
+        print "bad path:",path,lpath
+        conn.send(res_bad_request)
+        return
+    if os.path.isdir(lpath):
+        list_dir(lpath,path,conn)
     else:
-        send_file(path,conn)
+        send_file(lpath,path,conn)
 
 def http_proc(conn,addr):
     req = conn.recv(16*1024)
@@ -156,6 +174,7 @@ def http_proc(conn,addr):
         return
     head_method = head_lines[0].split(" ")
     head_properties = {}
+
     for line in head_lines[1:]:
         if line == "":
             break
@@ -167,13 +186,24 @@ def http_proc(conn,addr):
         conn.send(res_bad_request)
         conn.close()
         return
-    if head_method[0] != "GET" or not os.path.exists(w2l(path)):
-        print "bad method or path:" , head_method[0] ,path,w2l(path)
+    if head_method[0] != "GET":
         conn.send(res_bad_request)
         conn.close()
         return
+    params = {}
+    pos = path.find("?")
+    if pos > 0:
+        for param_pair in path[pos+1:].split("&"):
+            param_pair = param_pair.split("=")
+            if len(param_pair) != 2 or param_pair[0] == "":
+                print "bad get parameter:",param_pair
+                conn.send(res_bad_request)
+                conn.close()
+                return
+            params[param_pair[0]] = param_pair[1]
+        path = path[0:pos]
     try:
-        do_get(path,conn)
+        do_get(path,conn,params)
     except Exception, e:
         print e
     finally:
