@@ -5,7 +5,8 @@ import thread
 import urllib
 import time
 import platform
-import codebase_2 as codebase
+import codebase
+import auth
 import select
 #config files
 config = {}
@@ -16,8 +17,8 @@ config["bind_ip"] = "0.0.0.0"
 config["bind_port"] = 80
 config["root_path"] = ""
 config["is_https"] = False
-config["web"] = "./web"
-web_spec_path = "/__web__"
+config["auth"] = "./auth"
+auth_spec_path = "/__auth__"#inner name of auth,use to warp auth dir or as a inner object.
 #global variant
 mime_map = {"":"application/octet-stream"}
 #response string
@@ -51,10 +52,10 @@ def pase_param():
             config["bind_port"] = int(arg[5:])
         elif arg.startswith("ip:"):
             config["bind_ip"] = arg[3:]
-        elif arg.startswith("web:"):
-            config["web"] = arg[4:]
-            if not os.path.isdir(config["web"]):
-                print "bad path:",config["web"]
+        elif arg.startswith("auth:"):
+            auth_spec_path = arg[4:]
+            if not os.path.isdir(config["auth"]):
+                print "bad path:",config["auth"]
                 exit(-1)
         elif arg == "exit":
             is_exit = True
@@ -150,11 +151,26 @@ def list_dir(lpath,path,conn):
         out_list[i] = '&nbsp;&nbsp;</td><td>'.join(out_list[i])
     conn.send(res_ok)
     conn.send(page_template.format('</td></tr><tr><td>'.join(out_list)))
-def do_web(path,comm,params):
-    pass
+def do_auth(path,comm,params):
+    try:
+        if len(path) == len(auth_spec_path):#do auth with md5.
+            if params["method"] == "auth":
+                id_str = params["id"]
+                user_name = params["user"]
+                sum_md5 = params["md5"]
+                #to be continue
+            elif params["method"] == "login":#generate a auth id.
+                #to be continue
+        else:
+            lpath = config["auth"] + path[len(auth_spec_path):]
+            send_file(lpath,path,conn)
+    except Exception , e:
+        print "do_auth:",e
+    finally:
+        conn.send(res_bad_request)
 def do_get(path,conn,params):
-    if path.startswith(web_spec_path):
-        do_web(path,conn,params)
+    if path.startswith(auth_spec_path):
+        do_auth(path,conn,params)
         return
     lpath = w2l(path)
     if not os.path.exists(lpath):
