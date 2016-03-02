@@ -1,0 +1,33 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>TinyServer Login</title>
+<style>a td input{font-size:12pt}</style>
+<script type="text/javascript" src="jquery-1.12.1.min.js"></script>
+<script type="text/javascript" src="md5-min.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+
+		$.get("/__auth__",{method:"login"})
+		.done(function(data){
+
+		}).fail(function(data){
+
+		});
+	});
+
+	function do_login1(){
+
+	}
+</script>
+</head>
+<body>
+<form>
+	<table>
+	<tr><td>用户</td><td><input name="user" type="text" value=""/></td></tr>
+	<tr><td>密码</td><td><input id="pass" name="pass" type="password" value=""/></td></tr>
+	<tr><td></td><td><input id="login" type="button" value="login" onclick="javascript:do_login1();" /></td></tr>
+	</table>
+</form>
+</body>
+</html>
