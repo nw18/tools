@@ -51,6 +51,7 @@ class ThreadPool:
     def fini(self):
         for i in range(0,self._thread_num):
             self._arg_list.push(False)
+        time.sleep(1)
             
     def push(self,arg_list,blocking = 1):
         return self._arg_list.push(arg_list,blocking)

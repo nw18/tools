@@ -26,7 +26,9 @@ res_bad_request = "HTTP/1.1 500 Bad Requect\r\n\r\n"
 res_not_found = "HTTP/1.1 404 Not Found\r\nContent-type: text/html\r\n\r\n"; 
 res_ok = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n"
 res_file_ok = "HTTP/1.1 200 OK\r\nContent-Length: {0}\r\nContent-type: {1}\r\n\r\n"
-res_redirect = "HTTP/1.1 301 Moved Permanently\r\nContent-type: text/html\r\nLocation: {0}\r\n\r\n"
+res_redirect = "HTTP/1.1 302 Temporarily Moved\r\nLocation: {0}\r\n\r\n"
+res_text_ok = "HTTP/1.1 200 OK\r\nContent-type:text/plain\r\nContent-Length: {0}\r\n\r\n{1}"
+res_text_ok_cookie = "HTTP/1.1 200 OK\r\nSet-Cookie: {2}; path=/;\r\nContent-type:text/plain\r\nContent-Length: {0}\r\n\r\n{1}"
 #page template
 page_template = ""
 def init_code():
@@ -151,16 +153,31 @@ def list_dir(lpath,path,conn):
         out_list[i] = '&nbsp;&nbsp;</td><td>'.join(out_list[i])
     conn.send(res_ok)
     conn.send(page_template.format('</td></tr><tr><td>'.join(out_list)))
-def do_auth(path,comm,params):
+def do_auth(path,conn,params):
     try:
         if len(path) == len(auth_spec_path):#do auth with md5.
             if params["method"] == "auth":
+                if not ("id" in params and "user" in params and "md5" in params):
+                    conn.send(res_bad_request)
+                    return
                 id_str = params["id"]
                 user_name = params["user"]
                 sum_md5 = params["md5"]
-                #to be continue
+                if len(id_str) != 32 * 2 or user_name == "" or sum_md5 == "":
+                    conn.send(res_bad_request)
+                    return
+                res_msg = ""
+                if auth.do_auth(id_str,user_name,sum_md5):
+                    res_msg = "ok"
+                    auth.add_id(id_str)
+                    conn.send(res_text_ok_cookie.format(len(res_msg),res_msg,id_str))
+                else:
+                    res_msg = "fail"
+                    conn.send(res_text_ok.format(len(res_msg),res_msg))
             elif params["method"] == "login":#generate a auth id.
-                #to be continue
+                code = auth.gen_code()
+                print "login:",code
+                conn.send(res_text_ok.format(len(code),code))
         else:
             lpath = config["auth"] + path[len(auth_spec_path):]
             send_file(lpath,path,conn)
@@ -168,9 +185,25 @@ def do_auth(path,comm,params):
         print "do_auth:",e
     finally:
         conn.send(res_bad_request)
-def do_get(path,conn,params):
+def do_get(path,conn,params,id):
     if path.startswith(auth_spec_path):
         do_auth(path,conn,params)
+        return
+    if not auth.check_id(id):
+        addr = conn.getsockname()
+        port = ":" + str(addr[1])
+        if addr[1] == 80:
+            port = ""
+        if addr[0] == "0.0.0.0":
+            host_addr = "127.0.0.1" + port
+        else:
+            host_addr = addr[0] + port
+        prefix = "http://"
+        if config["is_https"]:
+            prefix = "https://"
+        print "redirect:",addr,host_addr
+        conn.send(res_redirect.format(prefix+ host_addr + auth_spec_path +"/login.html"))
+        conn.close()
         return
     lpath = w2l(path)
     if not os.path.exists(lpath):
@@ -183,43 +216,45 @@ def do_get(path,conn,params):
         send_file(lpath,path,conn)
 
 def http_proc(conn,addr):
-    req = conn.recv(16*1024)
-    head_lines = req.split("\r\n")
-    if len(head_lines) < 3:
-        conn.close()
-        return
-    head_method = head_lines[0].split(" ")
-    head_properties = {}
-
-    for line in head_lines[1:]:
-        if line == "":
-            break
-        kv = line.split(":")
-        head_properties[kv[0]] = kv[1]
-    path = urllib.unquote(head_method[1])
-    if path.find('/../') >=0 :
-        print "bad path:",path
-        conn.send(res_bad_request)
-        conn.close()
-        return
-    if head_method[0] != "GET":
-        conn.send(res_bad_request)
-        conn.close()
-        return
-    params = {}
-    pos = path.find("?")
-    if pos > 0:
-        for param_pair in path[pos+1:].split("&"):
-            param_pair = param_pair.split("=")
-            if len(param_pair) != 2 or param_pair[0] == "":
-                print "bad get parameter:",param_pair
-                conn.send(res_bad_request)
-                conn.close()
-                return
-            params[param_pair[0]] = param_pair[1]
-        path = path[0:pos]
     try:
-        do_get(path,conn,params)
+        req = conn.recv(16*1024)
+        head_lines = req.split("\r\n")
+        if len(head_lines) < 3:
+            conn.close()
+            return
+        head_method = head_lines[0].split(" ")
+        head_properties = {}
+
+        for line in head_lines[1:]:
+            if line == "":
+                break
+            kv = line.split(":")
+            head_properties[kv[0].lower()] = kv[1].strip()
+        if not "cookie" in head_properties:
+            head_properties["cookie"]= ""
+        path = urllib.unquote(head_method[1])
+        if path.find('/../') >=0 :
+            print "bad path:",path
+            conn.send(res_bad_request)
+            conn.close()
+            return
+        if head_method[0] != "GET":
+            conn.send(res_bad_request)
+            conn.close()
+            return
+        params = {}
+        pos = path.find("?")
+        if pos > 0:
+            for param_pair in path[pos+1:].split("&"):
+                param_pair = param_pair.split("=")
+                if len(param_pair) != 2 or param_pair[0] == "":
+                    print "bad get parameter:",param_pair
+                    conn.send(res_bad_request)
+                    conn.close()
+                    return
+                params[param_pair[0]] = param_pair[1]
+            path = path[0:pos]
+        do_get(path,conn,params,head_properties["cookie"])
     except Exception, e:
         print e
     finally:

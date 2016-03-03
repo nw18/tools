@@ -4,13 +4,43 @@ import md5
 import sys
 import getpass
 import re
+import time
+import threading
 auth_map={}
+auth_id_map={}
+auth_last_check_time=time.time()
+auth_lock = threading.Lock()
 auth_file="auth.conf"
+CHECK_PEIROD = 5
+TIMEOUT_TIME = 20 * 60
 def gen_code():
 	code = ""
 	for i in range(0,32):
-		code += "{0:08X}".format(random.randint(0,255))
+		code += "{0:02X}".format(random.randint(0,255))
 	return code
+def add_id(id):
+	global auth_id_map
+	auth_lock.acquire()
+	auth_id_map[id] = time.time()
+	auth_lock.release()
+def check_id(id):
+	global auth_id_map,auth_last_check_time
+	del_list = []
+	cur_time = time.time()
+	auth_lock.acquire()
+	if cur_time - auth_last_check_time > CHECK_PEIROD:
+		for key in auth_id_map:
+			if cur_time - auth_id_map[key] >= TIMEOUT_TIME:
+				del_list.append(key)
+		auth_last_check_time = cur_time
+	for key in del_list:
+		auth_id_map.pop(key)
+	res = False
+	if id in auth_id_map:
+		auth_id_map[id] = cur_time
+		res = True
+	auth_lock.release()
+	return res
 def help():
 	print "like:"
 	print "python auth.py add [name]"
@@ -20,7 +50,7 @@ def help():
 def do_load():
 	f = open(auth_file,"r")
 	for line in f:
-		fields = line.split(":")
+		fields = line.strip("\r\n").split(":")
 		auth_map[fields[0]] = fields[1]
 	f.close()
 def do_clear():

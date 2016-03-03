@@ -2,7 +2,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <title>TinyServer Login</title>
-<style>a td input{font-size:12pt}</style>
+<style>a td input{font-size:14px} input[type="text"], input[type="password"]{width:300px;}</style>
 <script type="text/javascript" src="jquery-1.12.1.min.js"></script>
 <script type="text/javascript" src="md5-min.js"></script>
 <script type="text/javascript">
@@ -10,23 +10,36 @@
 
 		$.get("/__auth__",{method:"login"})
 		.done(function(data){
-
+			$("#id").val(data);
 		}).fail(function(data){
-
+			alert("fail to get login code!")
 		});
 	});
 
-	function do_login1(){
-
+	function do_login(){
+		md51 = hex_md5($("#user").val()+":"+$("#pass").val())
+		md52 = hex_md5($("#id").val()+md51)
+		params = {method:"auth"
+		,"id":$("#id").val()
+		,"user":$("#user").val()
+		,"md5":md52};
+		$.get("/__auth__",params)
+		.done(function(data){
+			cruloc = location.href;
+			location = cruloc.substr(0,cruloc.indexOf("/__auth__"));
+		}).fail(function(data){
+			alert("fail while authing.")
+		});
 	}
 </script>
 </head>
 <body>
 <form>
 	<table>
-	<tr><td>用户</td><td><input name="user" type="text" value=""/></td></tr>
+	<tr><td>用户</td><td ><input id="user" name="user" type="text" value=""/></td></tr>
 	<tr><td>密码</td><td><input id="pass" name="pass" type="password" value=""/></td></tr>
-	<tr><td></td><td><input id="login" type="button" value="login" onclick="javascript:do_login1();" /></td></tr>
+	<tr><td>ID号</td><td><input id="id"name="id" type="text" value="" readonly="readonly" /></td></tr>
+	<tr><td></td><td><input id="login" type="button" value="login" onclick="do_login();" /></td></tr>
 	</table>
 </form>
 </body>
