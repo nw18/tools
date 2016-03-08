@@ -28,7 +28,7 @@ res_ok = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n"
 res_file_ok = "HTTP/1.1 200 OK\r\nContent-Length: {0}\r\nContent-type: {1}\r\n\r\n"
 res_redirect = "HTTP/1.1 302 Temporarily Moved\r\nLocation: {0}\r\n\r\n"
 res_text_ok = "HTTP/1.1 200 OK\r\nContent-type:text/plain\r\nContent-Length: {0}\r\n\r\n{1}"
-res_text_ok_cookie = "HTTP/1.1 200 OK\r\nSet-Cookie: {2}; path=/;\r\nContent-type:text/plain\r\nContent-Length: {0}\r\n\r\n{1}"
+res_text_ok_cookie = "HTTP/1.1 200 OK\r\nSet-Cookie: auid={2}; path=/;\r\nContent-type:text/plain\r\nContent-Length: {0}\r\n\r\n{1}"
 #page template
 page_template = ""
 def init_code():
@@ -218,20 +218,25 @@ def do_get(path,conn,params,id):
 def http_proc(conn,addr):
     try:
         req = conn.recv(16*1024)
+        print req
         head_lines = req.split("\r\n")
         if len(head_lines) < 3:
             conn.close()
             return
         head_method = head_lines[0].split(" ")
         head_properties = {}
-
         for line in head_lines[1:]:
             if line == "":
                 break
             kv = line.split(":")
             head_properties[kv[0].lower()] = kv[1].strip()
-        if not "cookie" in head_properties:
-            head_properties["cookie"]= ""
+        cookie_id = ""
+        if "cookie" in head_properties:
+            for kv in head_properties["cookie"].split(";"):
+                if kv.startswith("auid="):
+                    cookie_id = kv[5:].strip()
+                    print "cookie:",kv,cookie_id
+                    break
         path = urllib.unquote(head_method[1])
         if path.find('/../') >=0 :
             print "bad path:",path
@@ -254,7 +259,7 @@ def http_proc(conn,addr):
                     return
                 params[param_pair[0]] = param_pair[1]
             path = path[0:pos]
-        do_get(path,conn,params,head_properties["cookie"])
+        do_get(path,conn,params,cookie_id)
     except Exception, e:
         print e
     finally:

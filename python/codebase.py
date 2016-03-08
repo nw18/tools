@@ -62,13 +62,21 @@ class ThreadPool:
             arg = arg_list.pop()
             try:
                 if type(arg) is list or type(arg) is tuple:
-                    fstr = "fun("
-                    if len(arg) > 0:
+                    if len(arg) == 0:
+                        fun()
+                    elif len(arg) == 1:
+                        fun(arg[0])
+                    elif len(arg) == 2:
+                        fun(arg[0],arg[1])
+                    elif len(arg) == 3:
+                        fun(arg[0],arg[1],arg[2])
+                    else:
+                        fstr = "fun("
                         fstr += "arg[0]"
-                    for i in range(1,len(arg)):
-                        fstr += ",arg[" + str(i) + "]"
-                    fstr += ")"
-                    eval(fstr)
+                        for i in range(1,len(arg)):
+                            fstr += ",arg[" + str(i) + "]"
+                        fstr += ")"
+                        eval(fstr)
                 elif type(arg) is not bool:
                     fun(arg)
                 elif not arg:

@@ -25,8 +25,12 @@
 		,"md5":md52};
 		$.get("/__auth__",params)
 		.done(function(data){
-			cruloc = location.href;
-			location = cruloc.substr(0,cruloc.indexOf("/__auth__"));
+			if(data == "ok"){
+				cruloc = location.href;
+				location = cruloc.substr(0,cruloc.indexOf("/__auth__"));
+			}else{
+				alert("login fail.");
+			}
 		}).fail(function(data){
 			alert("fail while authing.")
 		});
@@ -35,10 +39,10 @@
 </head>
 <body>
 <form>
+	<input id="id"name="id" type="hidden" value="" />
 	<table>
 	<tr><td>用户</td><td ><input id="user" name="user" type="text" value=""/></td></tr>
 	<tr><td>密码</td><td><input id="pass" name="pass" type="password" value=""/></td></tr>
-	<tr><td>ID号</td><td><input id="id"name="id" type="text" value="" readonly="readonly" /></td></tr>
 	<tr><td></td><td><input id="login" type="button" value="login" onclick="do_login();" /></td></tr>
 	</table>
 </form>
