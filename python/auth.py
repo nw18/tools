@@ -6,6 +6,7 @@ import getpass
 import re
 import time
 import threading
+import logging as log
 auth_map={}
 auth_id_map={}
 auth_last_check_time=time.time()
@@ -13,6 +14,10 @@ auth_lock = threading.Lock()
 auth_file="auth.conf"
 CHECK_PEIROD = 5
 TIMEOUT_TIME = 20 * 60
+is_disable = False
+def disable():
+	global is_disable
+	is_disable = True
 def gen_code():
 	code = ""
 	for i in range(0,32):
@@ -25,6 +30,8 @@ def add_id(id):
 	auth_lock.release()
 def check_id(id):
 	global auth_id_map,auth_last_check_time
+	if is_disable:
+		return True
 	del_list = []
 	cur_time = time.time()
 	auth_lock.acquire()
@@ -106,7 +113,7 @@ def do_rmv(user):
 		pass
 def do_auth(code,user,sum_md5_code):
 	if user not in auth_map:
-		print "user:",user,"does not exists."
+		log.debug("do_auth:" + user + "does not exists.") 
 		return False
 	m = md5.new()
 	m.update(code + auth_map[user])

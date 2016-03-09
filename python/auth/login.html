@@ -6,9 +6,12 @@
 <script type="text/javascript" src="jquery-1.12.1.min.js"></script>
 <script type="text/javascript" src="md5-min.js"></script>
 <script type="text/javascript">
+var pos2 = location.href.lastIndexOf("/");
+var pos1 = location.href.lastIndexOf("/",pos2-1);
+var auth_url = location.href.substr(pos1,pos2 - pos1);
 	$(document).ready(function(){
 
-		$.get("/__auth__",{method:"login"})
+		$.get(auth_url,{method:"login"})
 		.done(function(data){
 			$("#id").val(data);
 		}).fail(function(data){
@@ -23,11 +26,11 @@
 		,"id":$("#id").val()
 		,"user":$("#user").val()
 		,"md5":md52};
-		$.get("/__auth__",params)
+		$.get(auth_url,params)
 		.done(function(data){
 			if(data == "ok"){
 				cruloc = location.href;
-				location = cruloc.substr(0,cruloc.indexOf("/__auth__"));
+				location = cruloc.substr(0,cruloc.indexOf(auth_url));
 			}else{
 				alert("login fail.");
 			}
