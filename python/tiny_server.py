@@ -126,7 +126,6 @@ def send_file(lpath,path,conn):
     finally:
         log.debug("send file({1}):{0}:".format(path,sz_read))
         f.close()
-
 def list_dir(lpath,path,conn):
     ppath = path
     pos = ppath.rfind("/")
@@ -225,7 +224,6 @@ def do_get(path,conn,params,id):
         list_dir(lpath,path,conn)
     else:
         send_file(lpath,path,conn)
-
 def http_proc(conn,addr):
     try:
         req = conn.recv(16*1024)
@@ -318,6 +316,5 @@ def main():
                     do_exit()
         if len(elist) > 0:
             log.warning("server error:{0} signal error:{1}".format(server_sock in elist,signal_sock in elist))
-            do_exit()
-            
+            do_exit()          
 main()
