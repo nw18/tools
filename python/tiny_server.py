@@ -10,15 +10,9 @@ import auth
 import select
 import logging as log
 #config files
-config = {}
-config["mime"] = "./mime.conf"
-config["pem_file"] = "./server.pem"
+config = {"mime":"./mime.conf","pem_file":"./server.pem",
 #parameters [port:8080] [root:/home] [ip:192.169.0.1] https
-config["bind_ip"] = "0.0.0.0"
-config["bind_port"] = 80
-config["root_path"] = ""
-config["is_https"] = False
-config["auth"] = "./auth"
+"bind_ip":"0.0.0.0","bind_port":80,"root_path":"","is_https":False,"auth":"./auth"}
 auth_spec_path = "/__auth__"#inner name of auth,use to warp auth dir or as a inner object.
 #global variant
 mime_map = {"":"application/octet-stream"}
@@ -59,6 +53,11 @@ def init_code():
 def pase_param():
     global config,auth_spec_path
     is_exit = False
+    #fix the auth path
+    ser_dir = os.path.split(os.path.realpath(__file__))[0]
+    config["auth"] = ser_dir + "/" + config["auth"]
+    config["mime"] = ser_dir + "/" + config["mime"]
+    config["pem_file"] = ser_dir + "/" + config["pem_file"]
     for arg in sys.argv[1:]:
         if arg.startswith("root:"):
             config["root_path"] = arg[5:]
@@ -193,10 +192,10 @@ def do_auth(path,conn,params):
                 conn.send(res_text_ok.format(len(code),code))
         else:
             lpath = config["auth"] + path[len(auth_spec_path):]
+            print lpath,path
             send_file(lpath,path,conn)
     except Exception , e:
         log.debug("do_auth:" + str(e))
-    finally:
         conn.send(res_bad_request)
 def do_get(path,conn,params,id):
     if path.startswith(auth_spec_path):
@@ -231,6 +230,7 @@ def do_get(path,conn,params,id):
 def http_proc(conn,addr):
     try:
         req = conn.recv(16*1024)
+        print req
         head_lines = req.split("\r\n")
         if len(head_lines) < 3:
             conn.close()
