@@ -192,7 +192,6 @@ def do_auth(path,conn,params):
                 conn.send(res_text_ok.format(len(code),code))
         else:
             lpath = config["auth"] + path[len(auth_spec_path):]
-            print lpath,path
             send_file(lpath,path,conn)
     except Exception , e:
         log.debug("do_auth:" + str(e))
@@ -230,7 +229,6 @@ def do_get(path,conn,params,id):
 def http_proc(conn,addr):
     try:
         req = conn.recv(16*1024)
-        print req
         head_lines = req.split("\r\n")
         if len(head_lines) < 3:
             conn.close()
