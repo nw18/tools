@@ -10,8 +10,8 @@ import auth
 import select
 import logging as log
 #config files
-config = {"mime":"./mime.conf","pem_file":"./server.pem",
-#parameters [port:8080] [root:/home] [ip:192.169.0.1] https
+config = {"mime":"./mime.conf","pem_file":"./server.pem","force_short":False,
+#parameters [port:8080] [root:/home] [ip:192.169.0.1] https auth.disable
 "bind_ip":"0.0.0.0","bind_port":80,"root_path":"","is_https":False,"auth":"./auth"}
 auth_spec_path = "/__auth__"#inner name of auth,use to warp auth dir or as a inner object.
 #global variant
@@ -72,6 +72,8 @@ def pase_param():
                 exit(-1)
         elif arg == "auth.disable":
             auth.disable()
+        elif arg == "force_short":
+            config["force_short"] = True
         elif arg == "exit":
             is_exit = True
         elif arg == "https":
@@ -163,8 +165,9 @@ def list_dir(lpath,path,conn):
     out_list.extend(out_list2)
     for i in range(0,len(out_list)):
         out_list[i] = '&nbsp;&nbsp;</td><td>'.join(out_list[i])
-    conn.send(res_ok)
-    conn.send(page_template.format('</td></tr><tr><td>'.join(out_list)))
+    result_page = page_template.format('</td></tr><tr><td>'.join(out_list))
+    conn.send(res_file_ok.format(len(result_page),"text/html"))
+    conn.send(result_page)
 def do_auth(path,conn,params):
     try:
         if len(path) == len(auth_spec_path):#do auth with md5.
@@ -213,7 +216,6 @@ def do_get(path,conn,params,id):
             prefix = "https://"
         log.debug("redirect:{0} addr:{1}".format(addr,host_addr))
         conn.send(res_redirect.format(prefix+ host_addr + auth_spec_path +"/login.html"))
-        conn.close()
         return
     lpath = w2l(path)
     if not os.path.exists(lpath):
@@ -226,48 +228,49 @@ def do_get(path,conn,params,id):
         send_file(lpath,path,conn)
 def http_proc(conn,addr):
     try:
-        req = conn.recv(16*1024)
-        head_lines = req.split("\r\n")
-        if len(head_lines) < 3:
-            conn.close()
-            return
-        head_method = head_lines[0].split(" ")
-        head_properties = {}
-        for line in head_lines[1:]:
-            if line == "":
+        while True:
+            req = conn.recv(16*1024)
+            if req == "":
                 break
-            kv = line.split(":")
-            head_properties[kv[0].lower()] = kv[1].strip()
-        cookie_id = ""
-        if "cookie" in head_properties:
-            for kv in head_properties["cookie"].split(";"):
-                kv = kv.strip()
-                if kv.startswith("auid="):
-                    cookie_id = kv[5:].strip()
+            head_lines = req.split("\r\n")
+            if len(head_lines) < 3:
+                break
+            head_method = head_lines[0].split(" ")
+            head_properties = {}
+            for line in head_lines[1:]:
+                if line == "":
                     break
-        path = urllib.unquote(head_method[1])
-        if path.find('/../') >=0 :
-            log.debug("bad path: " + path)
-            conn.send(res_bad_request)
-            conn.close()
-            return
-        if head_method[0] != "GET":
-            conn.send(res_bad_request)
-            conn.close()
-            return
-        params = {}
-        pos = path.find("?")
-        if pos > 0:
-            for param_pair in path[pos+1:].split("&"):
-                param_pair = param_pair.split("=")
-                if len(param_pair) != 2 or param_pair[0] == "":
-                    log.debug("bad get parameter: " + str(param_pair))
-                    conn.send(res_bad_request)
-                    conn.close()
-                    return
-                params[param_pair[0]] = param_pair[1]
-            path = path[0:pos]
-        do_get(path,conn,params,cookie_id)
+                kv = line.split(":")
+                head_properties[kv[0].lower()] = kv[1].strip()
+            cookie_id = ""
+            if "cookie" in head_properties:
+                for kv in head_properties["cookie"].split(";"):
+                    kv = kv.strip()
+                    if kv.startswith("auid="):
+                        cookie_id = kv[5:].strip()
+                        break
+            path = urllib.unquote(head_method[1])
+            if path.find('/../') >=0 :
+                log.debug("bad path: " + path)
+                conn.send(res_bad_request)
+                break
+            if head_method[0] != "GET":
+                conn.send(res_bad_request)
+                break
+            params = {}
+            pos = path.find("?")
+            if pos > 0:
+                for param_pair in path[pos+1:].split("&"):
+                    param_pair = param_pair.split("=")
+                    if len(param_pair) != 2 or param_pair[0] == "":
+                        log.debug("bad get parameter: " + str(param_pair))
+                        conn.send(res_bad_request)
+                        raise Exception("bad get query string")
+                    params[param_pair[0]] = param_pair[1]
+                path = path[0:pos]
+            do_get(path,conn,params,cookie_id)
+            if head_properties["connection"] == "close" or config["force_short"]:
+                break
     except Exception, e:
         log.debug("http_proc: " + str(e)) 
     finally:
