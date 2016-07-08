@@ -5,10 +5,11 @@ import thread
 import urllib
 import time
 import platform
-import codebase
 import auth
 import select
 import logging as log
+import multiprocessing
+import threading
 #config files
 config = {"mime":"./mime.conf","pem_file":"./server.pem","force_short":False,
 #parameters [port:8080] [root:/home] [ip:192.169.0.1] https auth.disable
@@ -279,12 +280,27 @@ def post_exit():
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     s.sendto("exit",("127.0.0.1",config["bind_port"]))
     s.close()
+def proc_call(para,tasks,i):
+    http_proc(para[0],para[1])
+    tasks.put(i)
+tasks_array = []
+tasks_free = multiprocessing.Queue()
+def proc_wait(tasks):
+    while True:
+        index = tasks.get()
+        if index <= 0:
+            break
+        if index < len(tasks_array) and tasks_array[index] is not None:
+            tasks_array[index].join()
+            tasks_array[index] = None
+            tasks_free.put(index)
+def find_position():
+    return tasks_free.get()
 def main():
     pase_param()
     init_log()
     init_code()
     load_mime()
-    tp = codebase.ThreadPool(http_proc,128)
     if config["is_https"]:
         from OpenSSL import SSL
         ctx = SSL.Context(SSL.SSLv23_METHOD)
@@ -293,6 +309,10 @@ def main():
         server_sock = SSL.Connection(ctx,socket.socket(socket.AF_INET,socket.SOCK_STREAM))
     else:
         server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    tasks = multiprocessing.Queue()
+    for i in range(64):
+        tasks_array.append(None)
+        tasks_free.put(i)
     server_sock.bind((config["bind_ip"],config["bind_port"]))
     signal_sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     signal_sock.bind((config["bind_ip"],config["bind_port"]))
@@ -301,9 +321,10 @@ def main():
         print "about to exit."
         server_sock.close()
         signal_sock.close()
-        tp.fini()
+        tasks.put(-1)
         print "bye."
         exit(0)
+    thread.start_new_thread(proc_wait,(tasks,))
     while True:
         try:
             rlist,wlist,elist = select.select([server_sock,signal_sock],[],[server_sock,signal_sock])
@@ -312,12 +333,15 @@ def main():
             break
         if len(rlist) > 0:
             if server_sock in rlist:
-                tp.push(server_sock.accept())
+                i = find_position()
+                proc = multiprocessing.Process(target=proc_call,args=(server_sock.accept(),tasks,i))
+                tasks_array[i] = proc
+                proc.start()
             else:
                 data,addr = signal_sock.recvfrom(4*1024)
                 if data == "exit" and addr[0] == "127.0.0.1":
                     do_exit()
         if len(elist) > 0:
             log.warning("server error:{0} signal error:{1}".format(server_sock in elist,signal_sock in elist))
-            do_exit()          
+            do_exit()
 main()
