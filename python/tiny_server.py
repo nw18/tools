@@ -47,9 +47,10 @@ def init_code():
         page_code = sys.getdefaultencoding()
     page_template = '<html>\
 	<head>\
+    <meta name="viewport" content="width=1024px, initial-scale=1" />\
 	<meta http-equiv="Content-Type" content="text/html; charset=' + page_code + '"/>\
 	<title>TinyServer</title>\
-	<style>a{{font-size:12pt}}</style></head>\
+	<style>a{{font-size:100%}}</style></head>\
 	<body><table><tr><td>{0}</td></tr></table></body></html>'
 def pase_param():
     global config,auth_spec_path
