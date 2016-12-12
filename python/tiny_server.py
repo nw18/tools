@@ -8,13 +8,13 @@ import platform
 import auth
 import select
 import logging as log
-import multiprocessing
+from multiprocessing import *
 import threading
 #config files
-config = {"mime":"./mime.conf","pem_file":"./server.pem","force_short":False,
+config = {"mime":"./mime.conf","pem_file":"./server.pem","force_short":True,
 #parameters [port:8080] [root:/home] [ip:192.169.0.1] https auth.disable
-"bind_ip":"0.0.0.0","bind_port":80,"root_path":"","is_https":False,"auth":"./auth"}
-auth_spec_path = "/__auth__"#inner name of auth,use to warp auth dir or as a inner object.
+"bind_ip":"","bind_port":80,"root_path":"d:","is_https":False,"auth":"./auth",
+"page_template":"","auth_spec_path":"/__auth__","proc_count":16}
 #global variant
 mime_map = {"":"application/octet-stream"}
 #response string
@@ -25,8 +25,6 @@ res_file_ok = "HTTP/1.1 200 OK\r\nContent-Length: {0}\r\nContent-type: {1}\r\n\r
 res_redirect = "HTTP/1.1 302 Temporarily Moved\r\nLocation: {0}\r\n\r\n"
 res_text_ok = "HTTP/1.1 200 OK\r\nContent-type:text/plain\r\nContent-Length: {0}\r\n\r\n{1}"
 res_text_ok_cookie = "HTTP/1.1 200 OK\r\nSet-Cookie: auid={2}; path=/;\r\nContent-type:text/plain\r\nContent-Length: {0}\r\n\r\n{1}"
-#page template
-page_template = ""
 def init_log():
     log.basicConfig(level=log.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -39,21 +37,21 @@ def init_log():
     console.setFormatter(formatter)
     log.getLogger('').addHandler(console)
 def init_code():
-    global page_template
+    global config
     page_code = "utf-8"
     if sys.getdefaultencoding() == "ascii":
         page_code = "gb2312"
     else:
         page_code = sys.getdefaultencoding()
-    page_template = '<html>\
-	<head>\
+    config["page_template"] = '<html>\
+    <head>\
     <meta name="viewport" content="width=1024px, initial-scale=1" />\
-	<meta http-equiv="Content-Type" content="text/html; charset=' + page_code + '"/>\
-	<title>TinyServer</title>\
-	<style>a{{font-size:100%}}</style></head>\
-	<body><table><tr><td>{0}</td></tr></table></body></html>'
+    <meta http-equiv="Content-Type" content="text/html; charset=' + page_code + '"/>\
+    <title>TinyServer</title>\
+    <style>a{{font-size:100%}}</style></head>\
+    <body><table><tr><td>{0}</td></tr></table></body></html>'
 def pase_param():
-    global config,auth_spec_path
+    global config
     is_exit = False
     #fix the auth path
     ser_dir = os.path.split(os.path.realpath(__file__))[0]
@@ -68,7 +66,7 @@ def pase_param():
         elif arg.startswith("ip:"):
             config["bind_ip"] = arg[3:]
         elif arg.startswith("authspec:"):
-            auth_spec_path = arg[9:]
+            config["auth_spec_path"] = arg[9:]
             if not os.path.isdir(config["auth"]):
                 print "bad path:" , config["auth"]
                 exit(-1)
@@ -167,12 +165,12 @@ def list_dir(lpath,path,conn):
     out_list.extend(out_list2)
     for i in range(0,len(out_list)):
         out_list[i] = '&nbsp;&nbsp;</td><td>'.join(out_list[i])
-    result_page = page_template.format('</td></tr><tr><td>'.join(out_list))
+    result_page = config["page_template"].format('</td></tr><tr><td>'.join(out_list))
     conn.send(res_file_ok.format(len(result_page),"text/html"))
     conn.send(result_page)
 def do_auth(path,conn,params):
     try:
-        if len(path) == len(auth_spec_path):#do auth with md5.
+        if len(path) == len(config["auth_spec_path"]):#do auth with md5.
             if params["method"] == "auth":
                 if not ("id" in params and "user" in params and "md5" in params):
                     conn.send(res_bad_request)
@@ -195,13 +193,13 @@ def do_auth(path,conn,params):
                 code = auth.gen_code()
                 conn.send(res_text_ok.format(len(code),code))
         else:
-            lpath = config["auth"] + path[len(auth_spec_path):]
+            lpath = config["auth"] + path[len(config["auth_spec_path"]):]
             send_file(lpath,path,conn)
     except Exception , e:
         log.debug("do_auth:" + str(e))
         conn.send(res_bad_request)
 def do_get(path,conn,params,id):
-    if path.startswith(auth_spec_path):
+    if path.startswith(config["auth_spec_path"]):
         do_auth(path,conn,params)
         return
     if not auth.check_id(id):
@@ -217,7 +215,7 @@ def do_get(path,conn,params,id):
         if config["is_https"]:
             prefix = "https://"
         log.debug("redirect:{0} addr:{1}".format(addr,host_addr))
-        conn.send(res_redirect.format(prefix+ host_addr + auth_spec_path +"/login.html"))
+        conn.send(res_redirect.format(prefix+ host_addr + config["auth_spec_path"] +"/login.html"))
         return
     lpath = w2l(path)
     if not os.path.exists(lpath):
@@ -270,6 +268,7 @@ def http_proc(conn,addr):
                         raise Exception("bad get query string")
                     params[param_pair[0]] = param_pair[1]
                 path = path[0:pos]
+            #print path,params,cookie_id
             do_get(path,conn,params,cookie_id)
             if head_properties["connection"] == "close" or config["force_short"]:
                 break
@@ -277,72 +276,36 @@ def http_proc(conn,addr):
         log.debug("http_proc: " + str(e)) 
     finally:
         conn.close()
-def post_exit():
-    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    s.sendto("exit",("127.0.0.1",config["bind_port"]))
-    s.close()
-def proc_call(para,tasks,i):
-    http_proc(para[0],para[1])
-    tasks.put(i)
-tasks_array = []
-tasks_free = multiprocessing.Queue()
-def proc_wait(tasks):
-    while True:
-        index = tasks.get()
-        if index <= 0:
-            break
-        if index < len(tasks_array) and tasks_array[index] is not None:
-            tasks_array[index].join()
-            tasks_array[index] = None
-            tasks_free.put(index)
-def find_position():
-    return tasks_free.get()
+def start_http(i,conf,mime):
+    global config,mime_map
+    config = conf
+    mime_map = mime
+    try:
+        server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_sock.bind((config["bind_ip"],config["bind_port"]))
+        server_sock.listen(1)
+        while True:
+            accept = server_sock.accept()
+            http_proc(accept[0],accept[1])
+        server_sock.close()
+        return ("bye " , i)
+    except Exception ,e:
+        return (e,config)
+def error(e):
+    print e
 def main():
     pase_param()
     init_log()
     init_code()
     load_mime()
-    if config["is_https"]:
-        from OpenSSL import SSL
-        ctx = SSL.Context(SSL.SSLv23_METHOD)
-        ctx.use_privatekey_file (config["pem_file"])
-        ctx.use_certificate_file(config["pem_file"])
-        server_sock = SSL.Connection(ctx,socket.socket(socket.AF_INET,socket.SOCK_STREAM))
-    else:
-        server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    tasks = multiprocessing.Queue()
-    for i in range(64):
-        tasks_array.append(None)
-        tasks_free.put(i)
-    server_sock.bind((config["bind_ip"],config["bind_port"]))
-    signal_sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    signal_sock.bind((config["bind_ip"],config["bind_port"]))
-    server_sock.listen(5)
-    def do_exit():
-        print "about to exit."
-        server_sock.close()
-        signal_sock.close()
-        tasks.put(-1)
-        print "bye."
-        exit(0)
-    thread.start_new_thread(proc_wait,(tasks,))
-    while True:
-        try:
-            rlist,wlist,elist = select.select([server_sock,signal_sock],[],[server_sock,signal_sock])
-        except Exception , e:
-            log.warning("socket select: " + str(e))
-            break
-        if len(rlist) > 0:
-            if server_sock in rlist:
-                i = find_position()
-                proc = multiprocessing.Process(target=proc_call,args=(server_sock.accept(),tasks,i))
-                tasks_array[i] = proc
-                proc.start()
-            else:
-                data,addr = signal_sock.recvfrom(4*1024)
-                if data == "exit" and addr[0] == "127.0.0.1":
-                    do_exit()
-        if len(elist) > 0:
-            log.warning("server error:{0} signal error:{1}".format(server_sock in elist,signal_sock in elist))
-            do_exit()
-main()
+    auth.disable()
+    pool = Pool(config["proc_count"])
+    for i in range(config["proc_count"]):
+        pool.apply_async(func=start_http, args=(i,config,mime_map), callback=error)
+    pool.close()
+    pool.join()
+    pool.terminate()
+
+if __name__ == '__main__':
+    main()

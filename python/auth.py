@@ -14,7 +14,7 @@ auth_lock = threading.Lock()
 auth_file=os.path.split(os.path.realpath(__file__))[0] + "/auth.conf"
 CHECK_PEIROD = 5
 TIMEOUT_TIME = 20 * 60
-is_disable = False
+is_disable = True
 def disable():
 	global is_disable
 	is_disable = True
