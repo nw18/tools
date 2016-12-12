@@ -13,8 +13,8 @@ import threading
 #config files
 config = {"mime":"./mime.conf","pem_file":"./server.pem","force_short":True,
 #parameters [port:8080] [root:/home] [ip:192.169.0.1] https auth.disable
-"bind_ip":"","bind_port":80,"root_path":"d:","is_https":False,"auth":"./auth",
-"page_template":"","auth_spec_path":"/__auth__","proc_count":16}
+"bind_ip":"","bind_port":80,"root_path":".","is_https":False,"auth":"./auth",
+"page_template":"","auth_spec_path":"/__auth__","proc_count":2}
 #global variant
 mime_map = {"":"application/octet-stream"}
 #response string
@@ -40,7 +40,10 @@ def init_code():
     global config
     page_code = "utf-8"
     if sys.getdefaultencoding() == "ascii":
-        page_code = "gb2312"
+        if sys.platform.startswith('win'):
+            page_code = "gb2312"
+        else:
+            page_code = "utf-8"
     else:
         page_code = sys.getdefaultencoding()
     config["page_template"] = '<html>\
@@ -148,6 +151,9 @@ def list_dir(lpath,path,conn):
         dir_list = []
     for sp in sorted(dir_list):
         lsp = lpath + sp
+        #skip the hiden files.
+        if sp.startswith("."):
+            continue
         try:
             file_ctime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getctime(lsp)))
             file_mtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime(lsp)))
@@ -283,6 +289,7 @@ def start_http(i,conf,mime):
     try:
         server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         server_sock.bind((config["bind_ip"],config["bind_port"]))
         server_sock.listen(1)
         while True:
