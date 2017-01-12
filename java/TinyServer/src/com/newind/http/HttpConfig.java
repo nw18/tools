@@ -10,6 +10,7 @@ public class HttpConfig {
 	private int port = 8080;
 	private String ip = "0.0.0.0";
 	private int maxThread = 16;
+	private int recvBufferSize = 8 * 1024 + 1;
 	private HttpConfig(){
 		
 	}
@@ -66,5 +67,9 @@ public class HttpConfig {
 	
 	public int getMaxThread() {
 		return maxThread;
+	}
+	
+	public int getRecvBufferSize() {
+		return recvBufferSize;
 	}
 }
