@@ -8,7 +8,7 @@ import platform
 import auth
 import select
 import logging as log
-from multiprocessing import *
+import multiprocessing 
 import threading
 #config files
 config = {"mime":"./mime.conf","pem_file":"./server.pem","force_short":True,
@@ -282,7 +282,7 @@ def http_proc(conn,addr):
         log.debug("http_proc: " + str(e)) 
     finally:
         conn.close()
-def start_http(i,conf,mime):
+def start_http_process(i,conf,mime):
     global config,mime_map
     config = conf
     mime_map = mime
@@ -307,12 +307,31 @@ def main():
     init_code()
     load_mime()
     auth.disable()
-    pool = Pool(config["proc_count"])
+    pool = multiprocessing.Pool(config["proc_count"])
     for i in range(config["proc_count"]):
-        pool.apply_async(func=start_http, args=(i,config,mime_map), callback=error)
+        pool.apply_async(func=start_http_process, args=(i,config,mime_map), callback=error)
     pool.close()
     pool.join()
     pool.terminate()
 
+def main2():
+    pase_param()
+    init_log()
+    init_code()
+    load_mime()
+    auth.disable()
+    server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    try:
+        server_sock.bind((config["bind_ip"],config["bind_port"]))
+        server_sock.listen(5)
+        while True:
+            accept = server_sock.accept()
+            threading._start_new_thread(http_proc,(accept[0],accept[1]))
+    except Exception ,e:
+        print (e,config)
+    finally:
+        server_sock.close()
+    print "bye."
+
 if __name__ == '__main__':
-    main()
+    main2()
