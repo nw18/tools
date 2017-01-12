@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 import com.newind.base.LogManager;
+import com.newind.http.HttpConfig;
 import com.newind.http.HttpServer;
 
 public class Application {
@@ -14,7 +15,9 @@ public class Application {
 	 */
 	public static void main(String[] args) {
 		try {
-			final HttpServer httpServer = new HttpServer("0.0.0.0", 8080);
+			HttpConfig config = HttpConfig.instacne();
+			config.load(args);
+			final HttpServer httpServer = new HttpServer(config.getIp(), config.getPort());
 			httpServer.setup();
 			Runtime.getRuntime().addShutdownHook(new Thread(){
 				@Override
@@ -34,9 +37,9 @@ public class Application {
 				}
 			}
 			logger.info("bye from main.");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		} 
 	}
 
 }
