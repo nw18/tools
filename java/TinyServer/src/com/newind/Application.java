@@ -1,7 +1,5 @@
 package com.newind;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.logging.Logger;
 
 import com.newind.base.LogManager;
@@ -16,6 +14,7 @@ public class Application {
 	 */
 	public static void main(String[] args) {
 		try {
+			System.out.println("hello");
 			HttpConfig config = HttpConfig.instacne();
 			config.load(args);
 			final HttpServer httpServer = new HttpServer(config.getIp(), config.getPort());

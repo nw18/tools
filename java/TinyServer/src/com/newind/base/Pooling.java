@@ -2,10 +2,8 @@ package com.newind.base;
 
 import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Logger;
 
 public abstract class Pooling<P,T extends PoolingWorker<P>>{
-	private Logger logger = LogManager.getLogger();
 	private int maxCount;
 	private Semaphore writeObject ,readObject;
 	private LinkedList<P> pendList;

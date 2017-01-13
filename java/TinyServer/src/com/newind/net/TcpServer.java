@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public abstract class TcpServer extends Thread{
+	private boolean running = true;
 	private ServerSocket socket;
 	public TcpServer(String ip,int port) throws IOException {
 		socket = new ServerSocket();
@@ -14,8 +15,12 @@ public abstract class TcpServer extends Thread{
 	
 	public void run() {
 		try {
-			while(true){
-				handSocket(socket.accept());
+			while(running){
+				if(running){
+					handSocket(socket.accept());
+				}else{
+					break;
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -24,6 +29,22 @@ public abstract class TcpServer extends Thread{
 			socket.close();
 			}catch(Exception e){
 				
+			}
+		}
+	}
+	
+	public void close() {
+		running = false;
+		Socket client = new Socket();
+		try {
+			client.connect(socket.getLocalSocketAddress(), 200);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				client.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
