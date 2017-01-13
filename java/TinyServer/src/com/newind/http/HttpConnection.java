@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
 import java.util.logging.Logger;
@@ -62,7 +63,10 @@ public class HttpConnection implements PoolingWorker<Socket>{
 					}
 				}
 			}
-		}catch (Exception e) {
+		}catch(SocketException e){
+			System.out.println("SocketException " + e.getMessage());
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}finally{
 			outputStream = null;
@@ -88,12 +92,12 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	}
 	
 	private void handleRequest(String reqString) throws Exception{
-		logger.info(reqString);
 		String fields[] = reqString.split("\r\n");
 		if(fields.length < 1){
 			sendResponse(HttpResponse.BadRequest());
 			throw new RuntimeException("bad http request");
 		}
+		logger.info(fields[0]);
 		String method[] = fields[0].split(" ");
 		if (method.length != 3) {
 			sendResponse(HttpResponse.BadRequest());
@@ -103,7 +107,14 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		if (filePath.startsWith("/")) {
 			filePath = filePath.substring(1);
 		}
+		if (filePath.equals(HttpResponse._INNER_LOGO_)) {
+			sendResponse(HttpResponse.OkayFile(config.getTinyLogo().length, Mime.toContentType("png")));
+			outputStream.write(config.getTinyLogo());
+			System.out.println("aha tiny logo !!!");
+			return;
+		}
 		File fileObject = filePath.equals("") ? rootFile : new File(rootFile,filePath);
+
 		if (!fileObject.exists() 
 				|| fileObject.isHidden()
 				|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
@@ -115,7 +126,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			String listString = HttpResponse.listDirectory(fileObject, rootFile);
 			byte[] data = listString.getBytes("UTF-8");
 			sendResponse(HttpResponse.OkayHtml(data.length));
-			logger.info("sending dir:" + fileObject.getAbsolutePath() + "\n" + listString);
+			//logger.info("sending dir:" + fileObject.getAbsolutePath() + "\n" + listString);
 			outputStream.write(data);
 		}else {
 			String extString = fileObject.getName();
@@ -128,12 +139,11 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			sendResponse(HttpResponse.OkayFile(fileObject.length(), extString));
 			FileInputStream fileStream = new FileInputStream(fileObject);
 			int len = 0;
-			logger.info("sending file:" + fileObject.getAbsolutePath());
+			//logger.info("sending file:" + fileObject.getAbsolutePath());
 			while((len = fileStream.read(buffer,0,buffer.length)) > 0){
 				outputStream.write(buffer, 0, len);
 			}
 			fileStream.close();
 		}
-		logger.info(reqString + "<<");
 	}
 }

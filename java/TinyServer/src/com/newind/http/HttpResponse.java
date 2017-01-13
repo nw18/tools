@@ -2,14 +2,15 @@ package com.newind.http;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.net.URLEncoder;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 
 public class HttpResponse {
+	public static final String _INNER_LOGO_ = "favicon.ico";
 	public static final String HTML_HEAD = "<html>" +
     "<head>" + 
-    "<meta name=\"viewport\" content=\"width=1024px, initial-scale=1\" />" +
+	"<link href=\"/" + _INNER_LOGO_ + "\" type=\"image/x-icon\" rel=icon>" +
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />" +
     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>" +
     "<title>TinyServer</title>" + 
     "<style>a{{font-size:100%}}</style></head>" +
@@ -17,6 +18,7 @@ public class HttpResponse {
 	public static final String HTML_TAIL = "</td></tr></table></body></html>";
 	public static final String HTML_COL_SPAN = "&nbsp;&nbsp;</td><td>";
 	public static final String HTML_ROW_SPAN = "</td></tr><tr><td>";
+	public static final String HTML_ROW_SPAN_EMPTY = "</td></tr><tr><td colspan=3>";
 	
 	public static String OkayHtml(int length){
 		return String.format("HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-type: text/html\r\n\r\n", length);
@@ -49,15 +51,31 @@ public class HttpResponse {
 		stringBuilder.append(HTML_HEAD);
 		String rootPath = root.getAbsolutePath();
 		try{
-			if(fileList != null){
+			stringBuilder.append("<a href=\""); 
+			String parent = dir.getParent();
+			if (null != parent && parent.length() > rootPath.length()) {
+				parent = parent.substring(rootPath.length());
+			}else{
+				parent = "/";
+			}
+			stringBuilder.append(parent.replace('\\', '/'));
+			stringBuilder.append("\">[Parent Directory]</a>");
+			stringBuilder.append(HTML_COL_SPAN);
+			stringBuilder.append("[Size]");
+			stringBuilder.append(HTML_COL_SPAN);
+			stringBuilder.append("[Modify]");
+			if(fileList != null && fileList.length != 0){
+				stringBuilder.append(HTML_ROW_SPAN);
 				SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 				Date date = new Date(0);
 				for(int i = 0; i < fileList.length; i++){
 					File file = fileList[i];
-					String url = URLEncoder.encode(dir.getAbsolutePath().substring(rootPath.length()),"UTF-8");
-					stringBuilder.append("<a href=\"" + url + "\">" + file.getName() + "</a>");
+					String absWebPath = file.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
+					stringBuilder.append("<a href=\"" + absWebPath + "\">" + file.getName() + "</a>");
 					stringBuilder.append(HTML_COL_SPAN);
-					stringBuilder.append(file.length());
+					if (file.isFile()) {						
+						stringBuilder.append(file.length());
+					}
 					stringBuilder.append(HTML_COL_SPAN);
 					date.setTime(file.lastModified());
 					stringBuilder.append(timeFormat.format(date));
@@ -65,6 +83,9 @@ public class HttpResponse {
 						stringBuilder.append(HTML_ROW_SPAN);
 					}
 				}
+			}else {
+				stringBuilder.append(HTML_ROW_SPAN_EMPTY);
+				stringBuilder.append("nothing");
 			}
 		}catch(Exception e){
 			e.printStackTrace();

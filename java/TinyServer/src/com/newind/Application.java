@@ -7,7 +7,6 @@ import com.newind.http.HttpConfig;
 import com.newind.http.HttpServer;
 
 public class Application {
-	public static final int MAX_THREAD_COUNT = 256;
 	private static Logger logger = LogManager.getLogger();
 	/**
 	 * @param args
@@ -23,22 +22,18 @@ public class Application {
 				@Override
 				public void run() {
 					logger.info("about to exit.");
-					httpServer.release();
-					logger.info("bye.");
+					HttpConfig.instacne().setShuttingDown(true);
 					System.exit(0);
 				}
 			});
-			while(true){
-				try{
-					Thread.sleep(1000);
-				}catch (Exception e){
-					e.printStackTrace();
-					break;
-				}
-			}
-			logger.info("bye from main.");
+			//listen thread end.
+			httpServer.join();
+			//release the pool.
+			httpServer.release();
+			logger.info("bye.");
 		} catch (Exception e) {
 			e.printStackTrace();
+			logger.info("bye on exception.");
 		} 
 	}
 
