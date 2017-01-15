@@ -1,17 +1,114 @@
-package com.newind.http;
+package com.newind;
 
 import java.io.File;
 
-public class HttpConfig {
-	private static HttpConfig _config_ = null;
+public class AppConfig {
+	private static AppConfig _config_ = null;
 	private String root = ".";
-	private int port = 8080;
+	private int httpPort = 8080;
+	private int ftpPort = 2121;
 	private String ip = "0.0.0.0";
-	private int maxThread = 64;
+	private int threadCount = 64;
 	private int recvBufferSize = 8 * 1024 + 1;
 	private boolean isShuttingDown = false;
 	private int recvTimeout = 5 * 1000;
 	private int connectionTimeout = 5 * 60 * 1000;
+	private AppConfig(){
+		
+	}
+	
+	public static AppConfig instacne() {
+		if(null == _config_){
+			_config_ = new AppConfig();
+		}
+		return _config_;
+	}
+	
+	public void load(String argv[]) throws Exception{
+		for(String arg : argv){
+			int pos = arg.indexOf(':');
+			if (pos <= 0) {
+				throw new Exception("bad parameter :\n" + arg);
+			}
+			String value = arg.substring(pos + 1);
+			switch (arg.substring(0, pos)) {
+			case "root":
+				while (value.endsWith("/") || value.endsWith("\\")) {
+					value = value.substring(0, value.length() - 2);
+				}
+				File file = new File(value);
+				if (!(file.exists() && file.isDirectory())) {
+					throw new Exception(value + " not exists or unaccessable.");
+				}
+				root = value;
+				break;
+			case "http_port":
+				httpPort = Integer.parseInt(value);
+				break;
+			case "ftp_port":
+				ftpPort = Integer.parseInt(value);
+				break;
+			case "thread":
+				threadCount = Integer.parseInt(value);
+				break;
+			default:
+				break;
+			}
+		}
+		//这块有问题,路径处理需要统一搞搞.
+		if(root.startsWith(".")){
+			root = new File(root).getAbsolutePath();
+		}
+		if (root.endsWith("/.")) {
+			root = root.substring(0, root.length() - 2);
+		}
+	}
+	
+	public String getRoot() {
+		return root;
+	}
+	
+	public String getIp() {
+		return ip;
+	}
+	
+	public int getHttpPort() {
+		return httpPort;
+	}
+	
+	public int getFtpPort() {
+		return ftpPort;
+	}
+	
+	public int getThread() {
+		return threadCount;
+	}
+	
+	public int getRecvBufferSize() {
+		return recvBufferSize;
+	}
+	
+	public boolean isShuttingDown() {
+		return isShuttingDown;
+	}
+	
+	public void setShuttingDown(boolean isShuttingDown) {
+		this.isShuttingDown = isShuttingDown;
+	}
+	
+	public int getRecvTimeout() {
+		return recvTimeout;
+	}
+	
+	public int getConnectionTimeout() {
+		return connectionTimeout;
+	}
+	
+	public byte[] getTinyLogo() {
+		return tinyLogo;
+	}
+	
+	//the LOGO data.
 	private byte[] tinyLogo = new byte[] { 0, 0, 1, 0, 1, 0, 64, 64, 0, 0, 1, 0, 32, 0, 40, 66, 0, 0, 22, 0, 0, 0, 40,
 			0, 0, 0, 64, 0, 0, 0, -128, 0, 0, 0, 1, 0, 32, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -560,92 +657,4 @@ public class HttpConfig {
 			0, 1, -1, -64, 31, -1, -1, -1, -64, 0, 15, -16, 31, -1, -1, -1, -1, -16, 0, -4, 15, -1, -1, -1, -1, -1, -16,
 			15, -113, -1, -1, -1, -1, -1, -1, -1, -25, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-	private HttpConfig(){
-		
-	}
-	
-	public static HttpConfig instacne() {
-		if(null == _config_){
-			_config_ = new HttpConfig();
-		}
-		return _config_;
-	}
-	
-	public void load(String argv[]) throws Exception{
-		for(String arg : argv){
-			int pos = arg.indexOf(':');
-			if (pos <= 0) {
-				System.out.print("bad parameter :\n" + arg);
-				break;
-			}
-			String value = arg.substring(pos + 1);
-			switch (arg.substring(0, pos)) {
-			case "root":
-				while (value.endsWith("/") || value.endsWith("\\")) {
-					value = value.substring(0, value.length() - 2);
-				}
-				File file = new File(value);
-				if (!(file.exists() && file.isDirectory())) {
-					throw new Exception(value + " not exists or unaccessable.");
-				}
-				root = value;
-				break;
-			case "port":
-				port = Integer.parseInt(value);
-				break;
-			case "max_thread":
-				maxThread = Integer.parseInt(value);
-				break;
-			default:
-				break;
-			}
-		}
-		//这块有问题,路径处理需要统一搞搞.
-		if(root.startsWith(".")){
-			root = new File(root).getAbsolutePath();
-		}
-		if (root.endsWith("/.")) {
-			root = root.substring(0, root.length() - 2);
-		}
-	}
-	
-	public String getRoot() {
-		return root;
-	}
-	
-	public String getIp() {
-		return ip;
-	}
-	
-	public int getPort() {
-		return port;
-	}
-	
-	public int getMaxThread() {
-		return maxThread;
-	}
-	
-	public int getRecvBufferSize() {
-		return recvBufferSize;
-	}
-	
-	public boolean isShuttingDown() {
-		return isShuttingDown;
-	}
-	
-	public void setShuttingDown(boolean isShuttingDown) {
-		this.isShuttingDown = isShuttingDown;
-	}
-	
-	public int getRecvTimeout() {
-		return recvTimeout;
-	}
-	
-	public int getConnectionTimeout() {
-		return connectionTimeout;
-	}
-	
-	public byte[] getTinyLogo() {
-		return tinyLogo;
-	}
 }

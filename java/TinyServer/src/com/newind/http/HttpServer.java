@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketAddress;
 
+import com.newind.AppConfig;
+import com.newind.AppPooling;
 import com.newind.base.LogManager;
 import com.newind.base.Pooling;
 import com.newind.base.PoolingWorker;
@@ -17,12 +19,7 @@ public class HttpServer extends TcpServer{
 	private Pooling<Socket, PoolingWorker<Socket>> pooling;
 	public HttpServer(String ip, int port) throws IOException {
 		super(ip, port);
-		pooling = new Pooling<Socket, PoolingWorker<Socket>>(HttpConfig.instacne().getMaxThread()) {
-			@Override
-			protected PoolingWorker<Socket> makeWorker() {
-				return new HttpConnection();
-			}
-		};
+		pooling = AppPooling.instance();
 	}
 
 	@Override

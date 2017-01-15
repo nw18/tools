@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 
 public class HttpResponse {
 	public static final String _INNER_LOGO_ = "favicon.ico";
+	//TODO add JavaScript to head could improve the length of path.
 	public static final String HTML_HEAD = "<html>" +
     "<head>" + 
 	"<link href=\"/" + _INNER_LOGO_ + "\" type=\"image/x-icon\" rel=icon>" +
@@ -70,6 +71,7 @@ public class HttpResponse {
 				Date date = new Date(0);
 				for(int i = 0; i < fileList.length; i++){
 					File file = fileList[i];
+					//TODO add JavaScript to head could improve the length of path.
 					String absWebPath = file.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
 					stringBuilder.append("<a href=\"" + absWebPath + "\">" + file.getName() + "</a>");
 					stringBuilder.append(HTML_COL_SPAN);

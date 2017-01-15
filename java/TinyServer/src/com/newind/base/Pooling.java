@@ -73,13 +73,18 @@ public abstract class Pooling<P,T extends PoolingWorker<P>>{
 	
 	protected void handProc(PoolingWorker<P> handler){
 		try {
-			P p;
-			readObject.acquire();
-			synchronized (pendList) {				
-				p = pendList.pop();
+			P p = null;
+			while(true){
+				readObject.acquire();
+				synchronized (pendList) {				
+					p = pendList.pop();
+				}
+				writeObject.release();
+				if (null == p) {
+					break;
+				}
+				handler.handle(p);
 			}
-			writeObject.release();
-			handler.handle(p);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

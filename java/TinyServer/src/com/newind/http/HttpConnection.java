@@ -11,6 +11,7 @@ import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
 import java.util.logging.Logger;
 
+import com.newind.AppConfig;
 import com.newind.base.LogManager;
 import com.newind.base.Mime;
 import com.newind.base.PoolingWorker;
@@ -18,16 +19,13 @@ import com.newind.base.PoolingWorker;
 public class HttpConnection implements PoolingWorker<Socket>{
 	public static final String TAG = HttpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
-	private HttpConfig config = HttpConfig.instacne();
+	private AppConfig config = AppConfig.instacne();
 	private byte[] buffer = new byte[config.getRecvBufferSize()]; 
 	private File rootFile = new File(config.getRoot());
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	@Override
 	public void handle(Socket param) {
-		if (param == null) {
-			return;
-		}
 		SocketAddress address = param.getRemoteSocketAddress();
 		logger.info(TAG + " from:" + address.toString());
 		try{
@@ -64,7 +62,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				}
 			}
 		}catch(SocketException e){
-			System.out.println("SocketException " + e.getMessage());
+			logger.info("SocketException " + e.getMessage());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -86,7 +84,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	}
 	
 	private void sendResponse(String str) throws Exception{
-		System.out.println(str);
+		logger.info(str);
 		outputStream.write(str.getBytes("UTF-8"));
 		outputStream.flush();
 	}
