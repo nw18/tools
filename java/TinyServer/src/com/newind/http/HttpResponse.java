@@ -53,12 +53,7 @@ public class HttpResponse {
 		String rootPath = root.getAbsolutePath();
 		try{
 			stringBuilder.append("<a href=\""); 
-			String parent = dir.getParent();
-			if (null != parent && parent.length() > rootPath.length()) {
-				parent = parent.substring(rootPath.length());
-			}else{
-				parent = "/";
-			}
+			String parent = dir.getAbsolutePath().substring(rootPath.length()) + "/..";
 			stringBuilder.append(parent.replace('\\', '/'));
 			stringBuilder.append("\">[Parent Directory]</a>");
 			stringBuilder.append(HTML_COL_SPAN);
