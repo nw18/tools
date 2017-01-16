@@ -13,12 +13,6 @@ public class FtpServer extends TcpServer {
 	}
 
 	@Override
-	protected void release() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	protected void setup() {
 		// TODO Auto-generated method stub
 		

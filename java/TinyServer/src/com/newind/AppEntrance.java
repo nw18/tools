@@ -25,7 +25,7 @@ public class AppEntrance {
 					httpServer.close();
 					AppConfig.instacne().setShuttingDown(true);
 					System.out.println("rlease worker");
-					httpServer.release();
+					AppPooling.instance().release();
 					System.out.println("rlease worker <<");
 					System.out.println("abort exit <<");
 				}

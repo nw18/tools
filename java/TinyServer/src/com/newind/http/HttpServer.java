@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketAddress;
 
-import com.newind.AppConfig;
 import com.newind.AppPooling;
 import com.newind.base.LogManager;
 import com.newind.base.Pooling;
@@ -27,11 +26,6 @@ public class HttpServer extends TcpServer{
 		SocketAddress address = peer.getRemoteSocketAddress();
 		logger.info(TAG + " from: " + address.toString());
 		pooling.putTask(peer);
-	}
-
-	@Override
-	public void release() {
-		pooling.release();
 	}
 
 	@Override
