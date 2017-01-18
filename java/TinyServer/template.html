@@ -9,8 +9,7 @@
 <table><tr><td>
 <script type="text/javascript">
 var sp = "&nbsp;&nbsp;</td><td>";
-var head=[
-];
+var cd="";
 var data=[
 ["1","2","3",100].join(sp),
 ["1","2","3",100].join(sp),
@@ -23,6 +22,8 @@ var data=[
 ["1","2","3",100].join(sp),
 ["1","2","3",100].join(sp)
 ];
+for(var line in data){ line[0] =  "<a href=\"" + cd + "/" + line[0] + ">" + line[0] + "</a>" }
+for(var i = 0; i < data.length;i++){ data[i] = data[i].join(sp); }
 document.write(data.join("</td></tr><tr><td>"));
 </script>
 </td></tr></table>

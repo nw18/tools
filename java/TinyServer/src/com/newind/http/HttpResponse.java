@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 
 public class HttpResponse {
 	public static final String _INNER_LOGO_ = "favicon.ico";
-	//TODO add JavaScript to head could improve the length of path.
 	public static final String HTML_HEAD = "<html>" +
     "<head>" + 
 	"<link href=\"/" + _INNER_LOGO_ + "\" type=\"image/x-icon\" rel=icon>" +
@@ -16,6 +15,14 @@ public class HttpResponse {
     "<title>TinyServer</title>" + 
     "<style>a{{font-size:100%}}</style></head>" +
     "<body><table><tr><td>";
+	public static final String HTML_JS_HEAD = 
+			"<script type=\"text/javascript\">\n"
+			+ "var sp = \"&nbsp;&nbsp;</td><td>\";\n";
+	public static final String HTML_JS_TAIL =
+			"for(var i = 0; i < data.length;i++){ data[i][0] =  \"<a href='\" + cd + \"/\" + data[i][0] + \"'>\" + data[i][0] + \"</a>\"; }\n"
+			+ "for(var i = 0; i < data.length;i++){ data[i] = data[i].join(sp); }\n"
+			+ "document.write(data.join(\"</td></tr><tr><td>\"));\n"
+			+ "</script>\n";
 	public static final String HTML_TAIL = "</td></tr></table></body></html>";
 	public static final String HTML_COL_SPAN = "&nbsp;&nbsp;</td><td>";
 	public static final String HTML_ROW_SPAN = "</td></tr><tr><td>";
@@ -34,7 +41,7 @@ public class HttpResponse {
 	}
 	
 	public static String FileNotFound(){
-		return "HTTP/1.1 404 Not Found\r\nContent-type: text/plain\r\nContent-Length: 0\r\n\r\n";
+		return "HTTP/1.1 404 Not Found\r\nContent-type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found";
 	}
 	
 	public static String OkayText(String text){
@@ -66,7 +73,6 @@ public class HttpResponse {
 				Date date = new Date(0);
 				for(int i = 0; i < fileList.length; i++){
 					File file = fileList[i];
-					//TODO add JavaScript to head could improve the length of path.
 					String absWebPath = file.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
 					stringBuilder.append("<a href=\"" + absWebPath + "\">" + file.getName() + "</a>");
 					stringBuilder.append(HTML_COL_SPAN);
@@ -80,6 +86,60 @@ public class HttpResponse {
 						stringBuilder.append(HTML_ROW_SPAN);
 					}
 				}
+			}else {
+				stringBuilder.append(HTML_ROW_SPAN_EMPTY);
+				stringBuilder.append("nothing");
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		stringBuilder.append(HTML_TAIL);
+		return stringBuilder.toString();
+	}
+	
+	//make the directory list as a java script format resutl.
+	public static String listDirectoryInJS(File dir,File root){
+		StringBuilder stringBuilder = new StringBuilder();
+		File fileList[] = dir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File file, String name) {
+				return !name.startsWith(".");
+			}
+		});
+		String rootPath = root.getAbsolutePath();
+		try{
+			String current = dir.getAbsolutePath().substring(rootPath.length());
+			stringBuilder.append(HTML_HEAD);
+			stringBuilder.append("<a href=\""); 
+			String parent = current + "/..";
+			stringBuilder.append(parent.replace('\\', '/'));
+			stringBuilder.append("\">[Parent Directory]</a>");
+			stringBuilder.append(HTML_COL_SPAN);
+			stringBuilder.append("[Size]");
+			stringBuilder.append(HTML_COL_SPAN);
+			stringBuilder.append("[Modify]");
+			if(fileList != null && fileList.length != 0){
+				stringBuilder.append(HTML_ROW_SPAN);
+				stringBuilder.append(HTML_JS_HEAD);
+				stringBuilder.append(String.format("var cd=\"%s\"\n",current));
+				SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+				Date date = new Date(0);
+				stringBuilder.append("var data=[");
+				for(int i = 0; i < fileList.length; i++){
+					File file = fileList[i];
+					date.setTime(file.lastModified());
+					stringBuilder.append(String.format("['%s','%s','%s']",
+							file.getName(),
+							file.isFile() ? String.valueOf(file.length()) : "",
+							timeFormat.format(date)
+							));
+					if (i != fileList.length - 1) {
+						stringBuilder.append(",\n");
+					}else {
+						stringBuilder.append("];\n");
+					}
+				}
+				stringBuilder.append(HTML_JS_TAIL);
 			}else {
 				stringBuilder.append(HTML_ROW_SPAN_EMPTY);
 				stringBuilder.append("nothing");

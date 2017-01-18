@@ -121,7 +121,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			return;
 		}
 		if (fileObject.isDirectory()) {
-			String listString = HttpResponse.listDirectory(fileObject, rootFile);
+			String listString = HttpResponse.listDirectoryInJS(fileObject, rootFile);
 			byte[] data = listString.getBytes("UTF-8");
 			sendResponse(HttpResponse.OkayHtml(data.length));
 			//logger.info("sending dir:" + fileObject.getAbsolutePath() + "\n" + listString);
