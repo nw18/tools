@@ -5,7 +5,7 @@ import java.util.logging.Logger;
 import com.newind.base.LogManager;
 import com.newind.http.HttpServer;
 
-public class AppEntrance {
+public class Application {
 	private static Logger logger = LogManager.getLogger();
 	/**
 	 * @param args

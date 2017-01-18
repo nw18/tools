@@ -1,5 +1,6 @@
 package com.newind.ftp;
 
+import java.security.cert.CRL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,40 +13,73 @@ public class FtpCommand {
 	private static final String SPCRLF = " \t\r\b";
 	private static final String SP = " ";
 	
-	private FtpCommand(){
+	FtpCommand(){
 		
 	}
 	
-	private int findCmdName(String cmd){
-		for(int i = 0; i < cmd.length(); i++){
+	private int findCmdName(String cmd,int start){
+		for(int i = start; i < cmd.length(); i++){
 			if(SPCRLF.indexOf(cmd.charAt(i)) >= 0)
 				return i;
 		}
 		return -1;
 	}
 	
-	private String errorResponse;
+	private int findPath(String cmd,int start){
+		for(int i = start; i < cmd.length();i++){
+			if (CRLF.indexOf(cmd.charAt(i)) < 0) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	private String response;
 	private int result = 0;
 	private String cmdName;
 	private List<String> cmdParaList = new ArrayList<String>();
 	
-	public static FtpCommand parse(String cmd){
-		FtpCommand ftpCmd = new FtpCommand();
+	public void parse(String cmd){
 		while(true){
-			int pos = ftpCmd.findCmdName(cmd);
+			int end = -1;
+			int pos = findCmdName(cmd,0);
 			if (!cmd.endsWith(CRLF) || pos < 0 || pos > 4) {
-				ftpCmd.result = -1;
-				ftpCmd.errorResponse = FtpResponse.ERR_COMMAND_FORMAT;
+				result = -1;
+				response = FtpResponse.ERR_COMMAND_FORMAT;
 				break;
 			}
-			ftpCmd.cmdName = cmd.substring(0, pos);
-			switch (ftpCmd.cmdName.toUpperCase()) {
+			cmdName = cmd.substring(0, pos);
+			switch (cmdName.toUpperCase()) {
 			case "USER"://用户名
-				
+				end = findPath(cmd, pos + 1);
+				if (end <= pos + 1) { // not null able
+					result = 3;
+					response = FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER;
+					break;
+				}
+				cmdParaList.add(cmd.substring(pos + 1, end));
 				break;
 			case "PASS": //密码
+				end = findPath(cmd, pos + 1);
+				if (end < pos + 1) { // null able
+					result = 3;
+					response = FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER;
+					break;
+				}
+				cmdParaList.add(cmd.substring(pos + 1, end));
 				break;
 			case "CWD": //改变工作目录
+				end = findPath(cmd, pos + 1);
+				if(end <= pos + 1){
+					result = 3;
+					response = FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER;
+					break;					
+				}
+				cmdParaList.add(cmd.substring(pos + 1, end));
+				break;
+			case "CDUP":
+				cmdName = "CWD";
+				cmdParaList.add("..");
 				break;
 			case "RETR": //下载文件
 				break;
@@ -68,21 +102,26 @@ public class FtpCommand {
 				break;
 			case "PWD": //打印当前路径
 				break;
-			case "LIST": //
+			case "LIST": //目录列表
 				break;
-			case "NLST":
+			case "NLST": //目录名称列表.
 				break;
-			case "":
+			case "SYST": //返回操作系统信息
+				break;
+			case "STAT": //返回控制连接状态或者文件信息.
+				break;
+			case "HELP": //这条命令我们在平常系统中得到的帮助没有什么区别，响应类型是211或214。建议在使用USER命令前使用此命令。
+				break;
+			case "NOOP":
 				break;
 			default:
-				ftpCmd.result = -2;
-				ftpCmd.errorResponse = FtpResponse.ERR_COMMAND_NOT_IMPLEMENT;
+				result = -2;
+				response = FtpResponse.ERR_COMMAND_NOT_IMPLEMENT;
 				break;
 			}
-			ftpCmd.result = 0;
+			result = 0;
 			break;
 		}
-		return ftpCmd;
 	}
 	
 	public String getCmdName() {
@@ -98,5 +137,17 @@ public class FtpCommand {
 	
 	public int getResult() {
 		return result;
+	}
+	
+	public void setResult(int result) {
+		this.result = result;
+	}
+	
+	public String getResponse() {
+		return response;
+	}
+	
+	public void setResponse(String response) {
+		this.response = response;
 	}
 }
