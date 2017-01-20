@@ -3,10 +3,13 @@ package com.newind;
 import java.util.logging.Logger;
 
 import com.newind.base.LogManager;
+import com.newind.ftp.FtpServer;
 import com.newind.http.HttpServer;
 
 public class Application {
 	private static Logger logger = LogManager.getLogger();
+	private static HttpServer httpServer;
+	private static FtpServer ftpServer;
 	/**
 	 * @param args
 	 */
@@ -16,24 +19,35 @@ public class Application {
 			AppConfig config = AppConfig.instacne();
 			AppPooling.setup(config.getThread());
 			config.load(args);
-			final HttpServer httpServer = new HttpServer(config.getIp(), config.getHttpPort());
-			httpServer.setup();
+			httpServer = new HttpServer(config.getIp(), config.getHttpPort());
+			httpServer.start();
+			ftpServer = new FtpServer(config.getIp(), config.getFtpPort());
+			ftpServer.start();
 			Runtime.getRuntime().addShutdownHook(new Thread(){
 				@Override
 				public void run() {
-					System.out.println("abort exit");
-					httpServer.close();
+					System.out.println("receive quit signal.");
+					if (null != httpServer) {						
+						httpServer.close();
+					}
+					if (null != ftpServer) {
+						ftpServer.close();
+					}
 					AppConfig.instacne().setShuttingDown(true);
-					System.out.println("rlease worker");
+					System.out.println("rlease worker.");
 					AppPooling.instance().release();
 					System.out.println("rlease worker <<");
-					System.out.println("abort exit <<");
+					System.out.println("rlease exit <<");
 				}
 			});
-			System.out.println("listen");
-			httpServer.join();
-			System.out.println("listen <<");
-			System.out.println("main bye.");
+			System.out.println("running.");
+			if (null != httpServer) {
+				httpServer.join();
+			}
+			if (null != ftpServer) {
+				ftpServer.join();
+			}
+			System.out.println("bye.");
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.info("bye on exception.");

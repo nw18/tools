@@ -13,27 +13,16 @@ import com.newind.net.TcpServer;
 import java.util.logging.Logger;
 
 public class HttpServer extends TcpServer{
-	public static final String TAG = TcpServer.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
-	private Pooling<Socket, PoolingWorker<Socket>> pooling;
+	private Pooling<Socket, PoolingWorker<Socket>> pooling = AppPooling.instance();
 	public HttpServer(String ip, int port) throws IOException {
 		super(ip, port);
-		pooling = AppPooling.instance();
 	}
 
 	@Override
 	protected void handSocket(Socket peer) {
 		SocketAddress address = peer.getRemoteSocketAddress();
-		logger.info(TAG + " from: " + address.toString());
+		logger.info("connection from: " + address.toString());
 		pooling.putTask(peer);
 	}
-
-	@Override
-	public void setup() {
-		logger.info(TAG + " setup");
-		pooling.setup();
-		start();
-		logger.info(TAG + " setup finish");
-	}
-
 }

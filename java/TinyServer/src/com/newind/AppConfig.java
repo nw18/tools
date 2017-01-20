@@ -13,6 +13,8 @@ public class AppConfig {
 	private boolean isShuttingDown = false;
 	private int recvTimeout = 5 * 1000;
 	private int connectionTimeout = 5 * 60 * 1000;
+	private String userName = "admin";
+	private String passWork = "123456";
 	private AppConfig(){
 		
 	}
@@ -106,6 +108,22 @@ public class AppConfig {
 	
 	public byte[] getTinyLogo() {
 		return tinyLogo;
+	}
+	
+	public String getUserName() {
+		return userName;
+	}
+	
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+	
+	public String getPassWork() {
+		return passWork;
+	}
+	
+	public void setPassWork(String passWork) {
+		this.passWork = passWork;
 	}
 	
 	//the LOGO data.

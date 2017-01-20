@@ -5,8 +5,6 @@ public class FtpResponse {
 //  重新启动标记应答。在这种情况下文本是确定的，它必须是：MARK yyyy=mmmm，其中yyy
 //y是用户进程数据流标记，mmmm是服务器标记。
 //  
-//120
-//  服务在nnn分钟内准备好
 //  
 //125
 //  数据连接已打开，准备传送
@@ -56,16 +54,20 @@ public class FtpResponse {
 //  进入被动模式
 //  
 //230
-//  用户登录
+//  用户登录成功
+	public static final String OK_USER_LOGON = "230 User logged in, proceed.\r\n";
 //  
 //250
 //  请求的文件操作完成
+	
+	public static final String OK_FILE_OPERATION = "250 Requested file action okay, completed.\r\n";
 //  
 //257
 //  创建"PATHNAME"
 //  
 //331
 //  用户名正确，需要口令
+	public static final String PEND_PASS_WORD = "331 User name okay, need password.\r\n";
 //  
 //332
 //  登录时需要帐户信息

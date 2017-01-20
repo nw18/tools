@@ -1,9 +1,10 @@
 package com.newind;
 
 import java.net.Socket;
-
+import com.newind.base.LogManager;
 import com.newind.base.Pooling;
 import com.newind.base.PoolingWorker;
+import com.newind.ftp.FtpConnection;
 import com.newind.http.HttpConnection;
 
 public class AppPooling extends Pooling<Socket, PoolingWorker<Socket>> {
@@ -27,9 +28,15 @@ public class AppPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 				HttpConnection connection = new HttpConnection();
 				connection.handle(param);
 			}else if (param.getLocalPort() == AppConfig.instacne().getFtpPort()) {
-				
+				FtpConnection connection = new FtpConnection();
+				connection.handle(param);
 			}else {
-				
+				try{
+					LogManager.getLogger().warning("unhandle " + param.getLocalAddress());
+					param.close();
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -48,5 +55,6 @@ public class AppPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 			return;
 		}
 		_instacne_ = new AppPooling(threadCount);
+		_instacne_.setup();
 	}
 }

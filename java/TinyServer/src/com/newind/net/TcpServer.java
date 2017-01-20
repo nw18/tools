@@ -62,7 +62,5 @@ public abstract class TcpServer extends Thread{
 		}
 	}
 	
-	protected abstract void setup();
-	
 	protected abstract void handSocket(Socket peer);
 }

@@ -25,7 +25,9 @@ public class FtpConnection implements PoolingWorker<Socket> {
 	private OutputStream outputStream;
 	private static Map<String, Method> actionMap = new HashMap<>();
 	private WorkStatus workStatus = WorkStatus.Init;
-
+	private FtpTrasportation ftpTrasportation;
+	private String userName;
+	
 	static {
 		//load command method map.
 		Method[] methods = FtpConnection.class.getDeclaredMethods();
@@ -46,6 +48,7 @@ public class FtpConnection implements PoolingWorker<Socket> {
 		try {
 			attachTo(param);
 			long last_recv_time = System.currentTimeMillis();
+			sendResponse(FtpResponse.OK_SERVER_READY);
 			while (true) {
 				try {
 					int len = inputStream.read(buffer, 0, buffer.length);
@@ -81,10 +84,13 @@ public class FtpConnection implements PoolingWorker<Socket> {
 					break;
 				} catch (Exception e){
 					e.printStackTrace();
+					break;
 				}
 			}
 			param.close();
 		} catch (IOException e) {
+			e.printStackTrace();
+		}catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -118,12 +124,22 @@ public class FtpConnection implements PoolingWorker<Socket> {
 		RenameFrom
 	}
 
-	void onUser(FtpCommand cmd) throws CloseConnection {
-		
+	void onUser(FtpCommand cmd) throws CloseConnection, IOException {
+		this.userName = cmd.getParam(0);
+		System.out.println("onUser " + userName);
+		workStatus = WorkStatus.WaitPass;
+		sendResponse(FtpResponse.PEND_PASS_WORD);
 	}
 
-	void onPass(FtpCommand cmd) throws CloseConnection{
-		
+	void onPass(FtpCommand cmd) throws CloseConnection, IOException{
+		if (workStatus != WorkStatus.WaitPass) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		String passWord = cmd.getParam(0);
+		System.out.println("onPass " + passWord);
+		workStatus = WorkStatus.LogOn;
+		sendResponse(FtpResponse.OK_USER_LOGON);
 	}
 	
 	private static class CloseConnection extends RuntimeException{
