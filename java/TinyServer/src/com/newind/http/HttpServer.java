@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketAddress;
 
-import com.newind.AppPooling;
+import com.newind.GlobalPooling;
 import com.newind.base.LogManager;
 import com.newind.base.Pooling;
 import com.newind.base.PoolingWorker;
@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 public class HttpServer extends TcpServer{
 	private Logger logger = LogManager.getLogger();
-	private Pooling<Socket, PoolingWorker<Socket>> pooling = AppPooling.instance();
+	private Pooling<Socket, PoolingWorker<Socket>> pooling = GlobalPooling.instance();
 	public HttpServer(String ip, int port) throws IOException {
 		super(ip, port);
 	}

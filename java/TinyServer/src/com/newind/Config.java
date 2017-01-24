@@ -2,8 +2,8 @@ package com.newind;
 
 import java.io.File;
 
-public class AppConfig {
-	private static AppConfig _config_ = null;
+public class Config {
+	private static Config _config_ = null;
 	private String root = ".";
 	private int httpPort = 8080;
 	private int ftpPort = 2121;
@@ -15,13 +15,13 @@ public class AppConfig {
 	private int connectionTimeout = 5 * 60 * 1000;
 	private String userName = "admin";
 	private String passWork = "123456";
-	private AppConfig(){
+	private Config(){
 		
 	}
 	
-	public static AppConfig instacne() {
+	public static Config instacne() {
 		if(null == _config_){
-			_config_ = new AppConfig();
+			_config_ = new Config();
 		}
 		return _config_;
 	}

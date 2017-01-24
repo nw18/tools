@@ -16,8 +16,8 @@ public class Application {
 	public static void main(String[] args) {
 		try {
 			System.out.println("hello");
-			AppConfig config = AppConfig.instacne();
-			AppPooling.setup(config.getThread());
+			Config config = Config.instacne();
+			GlobalPooling.setup(config.getThread());
 			config.load(args);
 			httpServer = new HttpServer(config.getIp(), config.getHttpPort());
 			httpServer.start();
@@ -33,9 +33,9 @@ public class Application {
 					if (null != ftpServer) {
 						ftpServer.close();
 					}
-					AppConfig.instacne().setShuttingDown(true);
+					Config.instacne().setShuttingDown(true);
 					System.out.println("rlease worker.");
-					AppPooling.instance().release();
+					GlobalPooling.instance().release();
 					System.out.println("rlease worker <<");
 					System.out.println("rlease exit <<");
 				}

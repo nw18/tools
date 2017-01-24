@@ -34,6 +34,7 @@ public class FtpResponse {
 //  
 //215
 //  名字系统类型
+	public static final String OK_SYSTEM_INFO = "215 UNIX Type: TS\r\n";
 //  
 //220
 //  对新用户服务准备好 //用户连接后,系统回复给客户端.
@@ -52,7 +53,7 @@ public class FtpResponse {
 //  
 //227
 //  进入被动模式
-//  
+	public static final String OK_PASV_MODE = "227 Entering Passive Mode (%s,%d,%d).\r\n";
 //230
 //  用户登录成功
 	public static final String OK_USER_LOGON = "230 User logged in, proceed.\r\n";
@@ -64,6 +65,7 @@ public class FtpResponse {
 //  
 //257
 //  创建"PATHNAME"
+	public static final String OK_FILE_PATH = "257 %s\r\n";
 //  
 //331
 //  用户名正确，需要口令
@@ -77,6 +79,7 @@ public class FtpResponse {
 //  
 //421
 //  不能提供服务，关闭控制连接
+	public static final String WAR_NOT_IN_SERVICE = "421 Service not available, closing control connection.\r\n";
 //  
 //425
 //  不能打开数据连接

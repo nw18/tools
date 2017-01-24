@@ -25,9 +25,17 @@ public class FtpCommand {
 	
 	private int findPath(String cmd,int start){
 		for(int i = start; i < cmd.length();i++){
-			if (CRLF.indexOf(cmd.charAt(i)) < 0) {
+			if (CRLF.indexOf(cmd.charAt(i)) >= 0) {
 				return i;
 			}
+		}
+		return -1;
+	}
+	
+	private int findParam(String cmd,int start){
+		for(int i = start; i < cmd.length(); i++){
+			if(SPCRLF.indexOf(cmd.charAt(i)) >= 0)
+				return i;
 		}
 		return -1;
 	}
@@ -85,6 +93,7 @@ public class FtpCommand {
 				if (end <= start) {
 					result = ERR_PARAM;
 					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
@@ -94,6 +103,7 @@ public class FtpCommand {
 				if (end <= start) {
 					result = ERR_PARAM;
 					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
@@ -102,6 +112,7 @@ public class FtpCommand {
 				if (end <= start) {
 					result = ERR_PARAM;
 					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
@@ -110,6 +121,7 @@ public class FtpCommand {
 				if (end <= start) {
 					result = ERR_PARAM;
 					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
@@ -118,17 +130,18 @@ public class FtpCommand {
 				if (end <= start) {
 					result = ERR_PARAM;
 					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
 			case "ABOR": //放弃上次的操作.
-				//TODO 
 				break;
 			case "DELE": //删除文件.
 				end = findPath(cmd, start);
 				if (end <= start) {
 					result = ERR_PARAM;
 					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
@@ -137,6 +150,7 @@ public class FtpCommand {
 				if (end <= start) {
 					result = ERR_PARAM;
 					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
@@ -145,20 +159,93 @@ public class FtpCommand {
 				if (end <= start) {
 					result = ERR_PARAM;
 					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
 			case "PWD": //打印当前路径
 				break;
+			case "TYPE": //结构设置
+				end = findParam(cmd, start);
+				if (end <= start) {
+					result = ERR_PARAM;
+					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
+				}
+				cmdParaList.add(cmd.substring(start, end));
+				break;
+			case "STRU":
+				end = findParam(cmd, start);
+				if (end <= start) {
+					result = ERR_PARAM;
+					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
+				}
+				cmdParaList.add(cmd.substring(start, end));
+				break;
+			case "MODE":
+				end = findParam(cmd, start);
+				if (end <= start) {
+					result = ERR_PARAM;
+					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
+				}
+				cmdParaList.add(cmd.substring(start, end));
+				break;
+			case "PASV": //数据链接模式
+				break;
+			case "PORT":
+				end = findPath(cmd, start);
+				if (end <= start) {
+					result = ERR_PARAM;
+					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
+				}
+				String paras = cmd.substring(start, end);
+				String paraArray[]  = null;
+				try{
+					paraArray = paras.split(",");
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+				if (paraArray == null || paraArray.length != 6) {
+					result = ERR_PARAM;
+					response = FtpResponse.ERR_COMMAND_FORMAT;
+					break;
+				}
+				for(String para : paraArray){
+					cmdParaList.add(para);
+				}
+				break;
 			case "LIST": //目录列表
+				end = findPath(cmd, start);
+				if (end <= start) {
+					cmdParaList.add(".");
+				}else {
+					cmdParaList.add(cmd.substring(start, end));
+				}
 				break;
 			case "NLST": //目录名称列表.
+				end = findPath(cmd, start);
+				if (end <= start) {
+					cmdParaList.add(".");
+				}else {
+					cmdParaList.add(cmd.substring(start, end));
+				}
 				break;
 			case "SYST": //返回操作系统信息
 				break;
 			case "STAT": //返回控制连接状态或者文件信息.
+				end = findPath(cmd, start);
+				if (end > start) {
+					cmdParaList.add(cmd.substring(start, end));
+				}
 				break;
 			case "HELP": //这条命令我们在平常系统中得到的帮助没有什么区别，响应类型是211或214。建议在使用USER命令前使用此命令。
+				end = findPath(cmd, start);
+				if (end > start) {
+					cmdParaList.add(cmd.substring(start, end));
+				}
 				break;
 			case "NOOP":
 				break;
@@ -185,6 +272,10 @@ public class FtpCommand {
 	
 	public String getParam(int index){
 		return cmdParaList.get(index);
+	}
+	
+	public int getParamCount(){
+		return cmdParaList.size();
 	}
 	
 	public int getResult() {

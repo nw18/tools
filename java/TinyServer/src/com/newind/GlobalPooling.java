@@ -7,9 +7,9 @@ import com.newind.base.PoolingWorker;
 import com.newind.ftp.FtpConnection;
 import com.newind.http.HttpConnection;
 
-public class AppPooling extends Pooling<Socket, PoolingWorker<Socket>> {
+public class GlobalPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 
-	protected AppPooling(int maxCount) {
+	protected GlobalPooling(int maxCount) {
 		super(maxCount);
 	}
 
@@ -24,10 +24,10 @@ public class AppPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 			if(null == param){
 				return;
 			}
-			if(param.getLocalPort() == AppConfig.instacne().getHttpPort()){
+			if(param.getLocalPort() == Config.instacne().getHttpPort()){
 				HttpConnection connection = new HttpConnection();
 				connection.handle(param);
-			}else if (param.getLocalPort() == AppConfig.instacne().getFtpPort()) {
+			}else if (param.getLocalPort() == Config.instacne().getFtpPort()) {
 				FtpConnection connection = new FtpConnection();
 				connection.handle(param);
 			}else {
@@ -41,8 +41,8 @@ public class AppPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 		}
 	}
 	
-	private static AppPooling _instacne_ = null;
-	public static AppPooling instance(){
+	private static GlobalPooling _instacne_ = null;
+	public static GlobalPooling instance(){
 		if(null == _instacne_){
 			System.err.println("AppPooling instance not init!!!");
 		}
@@ -54,7 +54,7 @@ public class AppPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 			System.err.println("AppPooling instance already inited!!!");
 			return;
 		}
-		_instacne_ = new AppPooling(threadCount);
+		_instacne_ = new GlobalPooling(threadCount);
 		_instacne_.setup();
 	}
 }
