@@ -11,7 +11,7 @@ import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
 import java.util.logging.Logger;
 
-import com.newind.Config;
+import com.newind.ApplicationConfig;
 import com.newind.base.LogManager;
 import com.newind.base.Mime;
 import com.newind.base.PoolingWorker;
@@ -19,7 +19,7 @@ import com.newind.base.PoolingWorker;
 public class HttpConnection implements PoolingWorker<Socket>{
 	public static final String TAG = HttpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
-	private Config config = Config.instacne();
+	private ApplicationConfig config = ApplicationConfig.instacne();
 	private byte[] buffer = new byte[config.getRecvBufferSize()]; 
 	private File rootFile = new File(config.getRoot());
 	private InputStream inputStream;

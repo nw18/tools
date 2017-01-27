@@ -1,11 +1,17 @@
 package com.newind.ftp;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Logger;
 
+import com.newind.ApplicationConfig;
 import com.newind.base.LogManager;
 
 public abstract class FtpTrasportation extends Thread{
@@ -16,6 +22,7 @@ public abstract class FtpTrasportation extends Thread{
 	public static final int EVENT_ERR_FILE = -2;
 	public static final int EVENT_EXIT = 0;
 	protected Logger logger = LogManager.getLogger();
+	protected ApplicationConfig config = ApplicationConfig.instacne();
 	protected Socket socket = null;
 	protected Callback callback = null;
 	protected Thread taskThread = null;
@@ -49,6 +56,21 @@ public abstract class FtpTrasportation extends Thread{
 	
 	@Override
 	public void run() {
+		while(true){
+			synchronized (this) {
+				if(target != null){
+					break;
+				}				
+			}
+			//wait for task.
+			try {
+				sleep(16);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				return;
+			}
+		}
+		
 		if (target.isDirectory() && workMode != MODE.LIST) {
 			callback.onResult(EVENT_ERR_FILE);
 			callback.onResult(EVENT_EXIT);
@@ -66,6 +88,7 @@ public abstract class FtpTrasportation extends Thread{
 				sendFile();
 				break;
 			}
+			socket.close();
 		}catch (Exception e) {
 			e.printStackTrace();
 			callback.onResult(EVENT_ERR_FILE);
@@ -81,15 +104,42 @@ public abstract class FtpTrasportation extends Thread{
 	}
 	
 	private void listDir() throws Exception{
-		
+		File files[] = target.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return !name.startsWith(".");
+			}
+		});
+		OutputStream outputStream = socket.getOutputStream();
+		for(int i = 0;files != null && i < files.length; i++){
+			File file = files[i];
+			outputStream.write(String.format("%s\r\n", file.getName()).getBytes());
+		}
+		outputStream.close();
 	}
 	
 	private void recvFile() throws Exception{
-		
+		OutputStream outputStream = new FileOutputStream(target);
+		InputStream inputStream = socket.getInputStream();
+		byte buffer[] = new byte[config.getRecvBufferSize()];
+		int len = -1;
+		while((len = inputStream.read(buffer)) > 0){
+			outputStream.write(buffer, 0, len);
+		}
+		outputStream.close();
+		inputStream.close();
 	}
 	
 	private void sendFile() throws Exception{
-		
+		OutputStream outputStream = socket.getOutputStream();
+		InputStream inputStream = new FileInputStream(target);
+		byte buffer[] = new byte[config.getRecvBufferSize()];
+		int len = -1;
+		while((len = inputStream.read(buffer)) > 0){
+			outputStream.write(buffer, 0, len);
+		}
+		outputStream.close();
+		inputStream.close();
 	}
 	
 	public static class PASV extends FtpTrasportation{
@@ -167,5 +217,10 @@ public abstract class FtpTrasportation extends Thread{
 			callback.onResult(EVENT_OK_CONN);
 			super.run();
 		}
+	}
+	
+	public synchronized void setTransport(File target,MODE mode){
+		this.workMode = mode;
+		this.target = target;
 	}
 }

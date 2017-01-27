@@ -13,14 +13,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import com.newind.Config;
+import com.newind.ApplicationConfig;
 import com.newind.base.LogManager;
 import com.newind.base.PoolingWorker;
 
 public class FtpConnection implements PoolingWorker<Socket> {
 	public static final String TAG = FtpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
-	private Config config = Config.instacne();
+	private ApplicationConfig config = ApplicationConfig.instacne();
 	private byte[] buffer = new byte[config.getRecvBufferSize()];
 	private File currentDirectory = new File(config.getRoot());
 	private InputStream inputStream;
