@@ -4,11 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -16,8 +19,29 @@ import java.util.logging.Logger;
 import com.newind.ApplicationConfig;
 import com.newind.base.LogManager;
 import com.newind.base.PoolingWorker;
+import com.newind.ftp.FtpTrasportation.Callback;
+import com.newind.ftp.FtpTrasportation.MODE;
+import com.newind.util.TextUtil;
 
-public class FtpConnection implements PoolingWorker<Socket> {
+public class FtpConnection implements PoolingWorker<Socket>,Callback {
+	enum WorkStatus{
+		Init,
+		WaitPass,
+		LogOn,
+		RenameFrom
+	}
+
+	private static class CloseConnection extends RuntimeException{
+		private static final long serialVersionUID = 1L;
+	}
+	
+	private static class FileCheckFail extends IOException {
+		private static final long serialVersionUID = 1L;
+		public FileCheckFail(String msg) {
+			super(msg);
+		}
+	}
+
 	public static final String TAG = FtpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
 	private ApplicationConfig config = ApplicationConfig.instacne();
@@ -90,8 +114,8 @@ public class FtpConnection implements PoolingWorker<Socket> {
 				} catch (CloseConnection e) {
 					logger.info("CloseConnection");
 					break;
-				} catch (Exception e){
-					e.printStackTrace();
+				} catch (Throwable e){
+					e.printStackTrace(); //unhandle exception
 					break;
 				}
 			}
@@ -120,7 +144,7 @@ public class FtpConnection implements PoolingWorker<Socket> {
 		outputStream.flush();
 	}
 	
-	void execFtpCommand(FtpCommand ftpCommand) throws CloseConnection , Exception{
+	void execFtpCommand(FtpCommand ftpCommand) throws Throwable{
 		Method method = actionMap.get(ftpCommand.getCmdName());
 		if (method == null) {
 			ftpCommand.setResult(FtpCommand.ERR);
@@ -128,16 +152,57 @@ public class FtpConnection implements PoolingWorker<Socket> {
 			return;
 		}
 		ftpCommand.setResult(0);
-		method.invoke(this, ftpCommand);
+		try{
+			method.invoke(this, ftpCommand);
+		}catch (InvocationTargetException e) {
+			throw e.getCause();
+		}
 	}
 	
-	enum WorkStatus{
-		Init,
-		WaitPass,
-		LogOn,
-		RenameFrom
+	File checkAndGet(String path) throws IOException{
+		String absPath;
+		path = URLDecoder.decode(path, "UTF-8");
+		if (path.startsWith("/") || path.startsWith("\\")) {
+			absPath = config.getRoot() + path;
+		}else{
+			absPath = currentDirectory.getAbsolutePath() + File.separator + path;
+		}
+		absPath = absPath.replace("\\", "/");
+		absPath = absPath.replace("//", "/");
+		absPath = absPath.replace("/./", "/");
+		String dirList[] = absPath.split("/");
+		absPath = "";
+		int upTimes = 0;
+		for(int i = 0; i < dirList.length; i++){
+			if (TextUtil.equal(dirList[i], "..")) {
+				dirList[i] = "";
+				upTimes++;
+			}
+		}
+		for(int i = dirList.length - 1; i >= 0; i--){
+			if (TextUtil.equal(dirList[i], "")) {
+				continue;
+			}
+			if (upTimes > 0) {
+				upTimes -= 1;
+				continue;
+			}
+			absPath = "/" + dirList[i] + absPath;
+		}
+		if (!config.getRoot().startsWith("/") && absPath.startsWith("/")) {
+			absPath = absPath.substring(1);
+		}
+		if (!absPath.startsWith(config.getRoot().replace('\\', '/'))) {
+			throw new FileCheckFail("file out of root :" + absPath + "|" + config.getRoot());
+		}
+		return new File(absPath);
 	}
-
+	
+	String getFilePath(File target) throws UnsupportedEncodingException{
+		String absPath = target.getAbsolutePath().substring(config.getRoot().length());
+		return URLEncoder.encode(absPath.replace('\\', '/'),"UTF-8");
+	}
+	
 	void onUser(FtpCommand cmd) throws IOException {
 		this.userName = cmd.getParam(0);
 		System.out.println("onUser " + userName);
@@ -161,7 +226,7 @@ public class FtpConnection implements PoolingWorker<Socket> {
 	}
 	
 	void onType(FtpCommand cmd) throws IOException{
-		if (cmd.getParam(0) == "I" || cmd.getParam(0) == "A") {
+		if ("I".equals(cmd.getParam(0)) || "A".equals(cmd.getParam(0))) {
 			sendResponse(FtpResponse.OK_COMMAND);
 		}else {
 			sendResponse(FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER);
@@ -169,7 +234,7 @@ public class FtpConnection implements PoolingWorker<Socket> {
 	}
 	
 	void onStru(FtpCommand cmd) throws IOException{
-		if (cmd.getParam(0) == "F") {
+		if ("F".equals(cmd.getParam(0))) {
 			sendResponse(FtpResponse.OK_COMMAND);
 		}else {
 			sendResponse(FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER);
@@ -177,7 +242,7 @@ public class FtpConnection implements PoolingWorker<Socket> {
 	}
 	
 	void onMode(FtpCommand cmd) throws IOException{
-		if (cmd.getParam(0) == "S") {
+		if ("S".equals(cmd.getParam(0))) {
 			sendResponse(FtpResponse.OK_COMMAND);
 		}else {
 			sendResponse(FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER);
@@ -199,15 +264,48 @@ public class FtpConnection implements PoolingWorker<Socket> {
 		sendResponse(String.format(FtpResponse.OK_FILE_PATH, curPath));
 	}
 	
+	void onCDUP(FtpCommand command) throws IOException{
+		try{
+			currentDirectory = checkAndGet("..");
+		}catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
+		}
+		System.out.println("CDUP:" + currentDirectory.getAbsolutePath());
+		sendResponse(FtpResponse.OK_COMMAND);
+	}
+	
+	void onXCWD(FtpCommand command) throws IOException{
+		onCWD(command);
+	}
+	
+	void onCWD(FtpCommand command) throws IOException{
+		File target = null;
+		try{
+			target = checkAndGet(command.getParam(0));
+		}catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
+		}
+		if (!target.exists() 
+				|| !target.isDirectory()
+				|| !target.canRead()) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
+		}
+		currentDirectory = target;
+		sendResponse(String.format(FtpResponse.OK_FILE_OPERATION_EX, getFilePath(currentDirectory),"changed"));
+	}
+	
 	void onPasv(FtpCommand cmd) throws IOException{
 		ServerSocket socket = new ServerSocket(0);
 		try {
 			ftpTrasportation = new FtpTrasportation.PASV(socket);
 			int port = socket.getLocalPort();
 			String ipAddrss = this.socket.getLocalAddress().getHostAddress();
-			ftpTrasportation.start();
+			ftpTrasportation.start(this);
 			sendResponse(String.format(FtpResponse.OK_PASV_MODE, 
-					ipAddrss.replaceAll(".", ","),
+					ipAddrss.replace('.', ','),
 					port >> 8,
 					port & 0xFF));
 		} catch (Exception e) {
@@ -220,37 +318,106 @@ public class FtpConnection implements PoolingWorker<Socket> {
 	
 	void onPort(FtpCommand cmd) throws IOException,Exception{
 		String ip = cmd.getParam(0);
-		ip += "," + cmd.getParam(1);
-		ip += "," + cmd.getParam(2);
-		ip += "," + cmd.getParam(3);
+		ip += "." + cmd.getParam(1);
+		ip += "." + cmd.getParam(2);
+		ip += "." + cmd.getParam(3);
 		int port = (Integer.parseInt(cmd.getParam(4)) << 8) + Integer.parseInt(cmd.getParam(5));
+		System.out.println("porting to :" + ip + ":" + port);
 		ftpTrasportation = new FtpTrasportation.PORT(ip, port);
-		ftpTrasportation.start();
+		ftpTrasportation.start(this);
 		sendResponse(FtpResponse.OK_COMMAND);
 	}
 	
-	void onList(FtpCommand cmd) throws IOException{
-		File tarDir = null;
-		if (cmd.getParamCount() == 0) {
-			tarDir = currentDirectory;
-		}else {
-			String path = cmd.getParam(0);
-			path = URLDecoder.decode(path,"UTF-8");
-			if (path.startsWith("/")) {
-				//absolute path
-				
-			}else {
-				//relative path
-				
-			}
+	void onNLst(FtpCommand cmd) throws IOException{
+		if (ftpTrasportation == null) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
 		}
+		try{
+			File target = checkAndGet(cmd.getParam(0));
+			ftpTrasportation.setTransport(target,MODE.NLST);
+		}catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		}
+	}
+	
+	void onList(FtpCommand cmd) throws IOException{
+		if (ftpTrasportation == null) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
+		}
+		try{
+			String path = cmd.getParam(0);
+			if (path.startsWith("-")) {
+				ftpTrasportation.setTransport(currentDirectory, MODE.LIST);
+			}else {;
+				File target = checkAndGet(cmd.getParam(0));
+				ftpTrasportation.setTransport(target,MODE.LIST);
+			}
+		}catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		}
+	}
+	
+	void onRetr(FtpCommand cmd) throws IOException{
+		if (ftpTrasportation == null) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
+		}
+		try{
+			File target = checkAndGet(cmd.getParam(0));
+			ftpTrasportation.setTransport(target,MODE.DOWNLOAD);
+		}catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		}
+	}
+	
+	void onSize(FtpCommand command) throws IOException{
+		try{
+			File target = checkAndGet(command.getParam(0));
+			if (target.exists() && target.isFile()) {
+				sendResponse(String.format(FtpResponse.OK_FILE_SIZE, target.length()));
+				return;
+			}
+		}catch (FileCheckFail e) {
+			// TODO: handle exception
+		}
+		sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+	}
+	
+	void onQuit(FtpCommand cmd) throws IOException,CloseConnection{
+		sendResponse(FtpResponse.OK_COMMAND);
+		throw new CloseConnection();
 	}
 	
 	void onNoop(FtpCommand cmd) throws IOException{
 		sendResponse(FtpResponse.OK_COMMAND);
 	}
 	
-	private static class CloseConnection extends RuntimeException{
-		private static final long serialVersionUID = 1L;
+	@Override
+	public void onResult(int result) {
+		try{
+		switch (result) {
+			case FtpTrasportation.EVENT_OK_CONN:
+				break;
+			case FtpTrasportation.EVENT_OK_FILE:
+				sendResponse(FtpResponse.OK_FILE_OPERATION);
+				break;
+			case FtpTrasportation.EVENT_OK_FILE_STATUS:
+				sendResponse(FtpResponse.RD_FILE_AND_CONNECTION);
+				break;
+			case FtpTrasportation.EVENT_EXIT:
+				ftpTrasportation = null;
+				break;
+			case FtpTrasportation.EVENT_ERR_CONN:
+			case FtpTrasportation.EVENT_ERR_FILE:
+				sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+				break;
+			default:
+				break;
+			}
+		}catch (Exception e) {
+			// TODO: handle exception
+		}
 	}
 }

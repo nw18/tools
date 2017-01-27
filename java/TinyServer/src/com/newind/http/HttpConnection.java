@@ -106,9 +106,13 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			filePath = filePath.substring(1);
 		}
 		if (filePath.equals(HttpResponse._INNER_LOGO_)) {
-			sendResponse(HttpResponse.OkayFile(config.getTinyLogo().length, Mime.toContentType("png")));
-			outputStream.write(config.getTinyLogo());
-			System.out.println("aha tiny logo !!!");
+			if (config.getTinyLogo() == null) {
+				sendResponse(HttpResponse.FileNotFound());
+			}else {
+				sendResponse(HttpResponse.OkayFile(config.getTinyLogo().length, Mime.toContentType("png")));
+				outputStream.write(config.getTinyLogo());
+				System.out.println("aha tiny logo !!!");
+			}
 			return;
 		}
 		File fileObject = filePath.equals("") ? rootFile : new File(rootFile,filePath);

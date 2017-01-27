@@ -41,7 +41,7 @@ public class HttpResponse {
 	}
 	
 	public static String FileNotFound(){
-		return "HTTP/1.1 404 Not Found\r\nContent-type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found";
+		return "HTTP/1.1 404 Not Found\r\nContent-type: text/plain\r\nContent-Length: 15\r\n\r\nFile Not Found.";
 	}
 	
 	public static String OkayText(String text){
@@ -108,11 +108,11 @@ public class HttpResponse {
 		});
 		String rootPath = root.getAbsolutePath();
 		try{
-			String current = dir.getAbsolutePath().substring(rootPath.length());
+			String current = dir.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
 			stringBuilder.append(HTML_HEAD);
 			stringBuilder.append("<a href=\""); 
 			String parent = current + "/..";
-			stringBuilder.append(parent.replace('\\', '/'));
+			stringBuilder.append(parent);
 			stringBuilder.append("\">[Parent Directory]</a>");
 			stringBuilder.append(HTML_COL_SPAN);
 			stringBuilder.append("[Size]");

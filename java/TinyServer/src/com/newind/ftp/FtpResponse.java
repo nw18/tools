@@ -11,6 +11,7 @@ public class FtpResponse {
 //  
 //150
 //  文件状态良好，打开数据连接
+	public static final String RD_FILE_AND_CONNECTION = "150 File status okay;\r\n";
 //  
 //200
 //  命令成功
@@ -28,6 +29,7 @@ public class FtpResponse {
 //  
 //213
 //  文件状态
+	public static final String OK_FILE_SIZE = "213 %d\r\n";
 //  
 //214
 //  帮助信息，信息仅对人类用户有用
@@ -60,8 +62,8 @@ public class FtpResponse {
 //  
 //250
 //  请求的文件操作完成
-	
 	public static final String OK_FILE_OPERATION = "250 Requested file action okay, completed.\r\n";
+	public static final String OK_FILE_OPERATION_EX = "250 %s %s.\r\n";
 //  
 //257
 //  创建"PATHNAME"
@@ -135,5 +137,4 @@ public class FtpResponse {
 //  
 //553
 //  未执行请求的操作：文件名不合法
-
 }

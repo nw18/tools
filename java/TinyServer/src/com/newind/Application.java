@@ -20,8 +20,8 @@ public class Application {
 			ApplicationPooling.setup(config.getThreadCount());
 			config.load(args);
 			//TODO remove HTTP server
-//			httpServer = new HttpServer(config.getIp(), config.getHttpPort());
-//			httpServer.start();
+			httpServer = new HttpServer(config.getIp(), config.getHttpPort());
+			httpServer.start();
 			ftpServer = new FtpServer(config.getIp(), config.getFtpPort());
 			ftpServer.start();
 			Runtime.getRuntime().addShutdownHook(new Thread(){

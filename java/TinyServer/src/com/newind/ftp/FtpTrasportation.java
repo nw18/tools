@@ -9,6 +9,9 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 import com.newind.ApplicationConfig;
@@ -18,7 +21,8 @@ public abstract class FtpTrasportation extends Thread{
 	private static final int CONN_TIMEOUT = 10 * 1000;
 	public static final int EVENT_OK_CONN = 1;
 	public static final int EVENT_ERR_CONN = -1;
-	public static final int EVENT_OK_FILE = 2;
+	public static final int EVENT_OK_FILE_STATUS = 2;
+	public static final int EVENT_OK_FILE = 3;
 	public static final int EVENT_ERR_FILE = -2;
 	public static final int EVENT_EXIT = 0;
 	protected Logger logger = LogManager.getLogger();
@@ -34,6 +38,7 @@ public abstract class FtpTrasportation extends Thread{
 		UPLOAD,
 		DOWNLOAD,
 		LIST,
+		NLST,
 	}
 	
 	public interface Callback{
@@ -46,11 +51,10 @@ public abstract class FtpTrasportation extends Thread{
 	
 	public abstract void cancel();
 	
-	public void startTrans(MODE mode, File target,Callback callback) {
+	public void startTrans(MODE mode, File target) {
 		if (callback == null || target == null) {
 			return;
 		}
-		this.callback = callback;
 		this.target = target;
 	}
 	
@@ -71,15 +75,22 @@ public abstract class FtpTrasportation extends Thread{
 			}
 		}
 		
-		if (target.isDirectory() && workMode != MODE.LIST) {
+		if ((workMode == MODE.UPLOAD && !target.canWrite())|| //upload but can't write
+				(!target.exists()) || //not exists
+				(workMode == MODE.DOWNLOAD && !target.canRead())|| //download but can't read
+				(target.isDirectory() && workMode != MODE.LIST && workMode != MODE.NLST)) {//download or upload a non dir.
 			callback.onResult(EVENT_ERR_FILE);
 			callback.onResult(EVENT_EXIT);
 			return;
 		}
+		callback.onResult(EVENT_OK_FILE_STATUS);
 		try{
 		switch (workMode) {
 			case LIST:
-				listDir();
+				listDir(true);
+				break;
+			case NLST:
+				listDir(false);
 				break;
 			case UPLOAD:
 				recvFile();
@@ -103,18 +114,35 @@ public abstract class FtpTrasportation extends Thread{
 		callback.onResult(EVENT_EXIT);
 	}
 	
-	private void listDir() throws Exception{
+	private void listDir(boolean showDetail) throws Exception{
 		File files[] = target.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return !name.startsWith(".");
+				return !name.startsWith(".") || name.equals(".") || name.equals("..");
 			}
 		});
 		OutputStream outputStream = socket.getOutputStream();
+		Date date = new Date(0);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd yyyy",Locale.US);
+		SimpleDateFormat dateFormat2 = new SimpleDateFormat("MMM dd HH:mm",Locale.US);
+		long current = System.currentTimeMillis();
 		for(int i = 0;files != null && i < files.length; i++){
 			File file = files[i];
-			outputStream.write(String.format("%s\r\n", file.getName()).getBytes());
+			if (showDetail) {
+				date.setTime(file.lastModified());
+				String dateStr = 
+						(current - file.lastModified()) < 365L * 24L * 3600L * 1000L ? 
+						dateFormat2.format(date) : dateFormat.format(date);;
+				String line = String.format("%c%c%cxr--r-- 1 tiny tiny %d %s %s\r\n", 
+						file.isDirectory() ? 'd' : '-',file.canRead() ? 'r' : '-' , file.canWrite() ? 'w' : '-',
+						file.length() , dateStr , file.getName());
+				outputStream.write(line.getBytes("UTF-8"));
+				System.out.print(line);
+			}else {
+				outputStream.write(String.format("%s\r\n", file.getName()).getBytes("UTF-8"));
+			}
 		}
+		outputStream.flush();
 		outputStream.close();
 	}
 	
@@ -140,6 +168,16 @@ public abstract class FtpTrasportation extends Thread{
 		}
 		outputStream.close();
 		inputStream.close();
+	}
+	
+	public void start(Callback callback){
+		this.callback = callback;
+		super.start();
+	}
+	
+	@Override
+	public synchronized void start() {
+		System.out.println(1 / 0);
 	}
 	
 	public static class PASV extends FtpTrasportation{

@@ -5,7 +5,7 @@ import java.util.List;
 
 public class FtpCommand {
 	private static final String CRLF = "\r\n";
-	private static final String SPCRLF = " \t\r\b\n";
+	private static final String SPCRLF = " \t\b\r\n";
 	public static final int OK = 0;
 	public static final int ERR = -1;
 	public static final int ERR_FORMAT = -2;
@@ -17,8 +17,9 @@ public class FtpCommand {
 	
 	private int findCmdName(String cmd,int start){
 		for(int i = start; i < cmd.length(); i++){
-			if(SPCRLF.indexOf(cmd.charAt(i)) >= 0)
+			if(SPCRLF.indexOf(cmd.charAt(i)) >= 0){
 				return i;
+			}
 		}
 		return -1;
 	}
@@ -34,8 +35,9 @@ public class FtpCommand {
 	
 	private int findParam(String cmd,int start){
 		for(int i = start; i < cmd.length(); i++){
-			if(SPCRLF.indexOf(cmd.charAt(i)) >= 0)
+			if(SPCRLF.indexOf(cmd.charAt(i)) >= 0){
 				return i;
+			}
 		}
 		return -1;
 	}
@@ -164,6 +166,7 @@ public class FtpCommand {
 				cmdParaList.add(cmd.substring(start,end));
 				break;
 			case "PWD": //打印当前路径
+			case "XPWD":
 				break;
 			case "TYPE": //结构设置
 				end = findParam(cmd, start);
@@ -248,6 +251,16 @@ public class FtpCommand {
 				}
 				break;
 			case "NOOP":
+			case "QUIT":
+				break;
+			case "SIZE": //get the size of file or 550
+				end = findPath(cmd, start);
+				if (end <= start) {
+					result = ERR_PARAM;
+					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
+				}
+				cmdParaList.add(cmd.substring(start, end));
 				break;
 			default:
 				result = -2;

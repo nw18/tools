@@ -4,9 +4,9 @@ import java.io.File;
 
 public class ApplicationConfig {
 	private static ApplicationConfig _config_ = null;
-	private String root = ".";
-	private int httpPort = 8080;
-	private int ftpPort = 2121;
+	private String root = "X:\\code_back";
+	private int httpPort = 80;
+	private int ftpPort = 21;
 	private String ip = "0.0.0.0";
 	private int threadCount = 64;
 	private int recvBufferSize = 8 * 1024 + 1;
@@ -57,11 +57,11 @@ public class ApplicationConfig {
 				break;
 			}
 		}
-		//这块有问题,路径处理需要统一搞搞.
+		//remove the end /. or \. any better way?
 		if(root.startsWith(".")){
 			root = new File(root).getAbsolutePath();
 		}
-		if (root.endsWith("/.")) {
+		if (root.endsWith("/.") || root.endsWith("\\.")) {
 			root = root.substring(0, root.length() - 2);
 		}
 	}
@@ -104,6 +104,10 @@ public class ApplicationConfig {
 	
 	public int getConnectionTimeout() {
 		return connectionTimeout;
+	}
+	
+	public void setTinyLogo(byte[] tinyLogo) {
+		this.tinyLogo = tinyLogo;
 	}
 	
 	public byte[] getTinyLogo() {
