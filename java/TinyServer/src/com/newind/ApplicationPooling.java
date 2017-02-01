@@ -24,10 +24,10 @@ public class ApplicationPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 			if(null == param){
 				return;
 			}
-			if(param.getLocalPort() == ApplicationConfig.instacne().getHttpPort()){
+			if(param.getLocalPort() == ApplicationConfig.instance().getHttpPort()){
 				HttpConnection connection = new HttpConnection();
 				connection.handle(param);
-			}else if (param.getLocalPort() == ApplicationConfig.instacne().getFtpPort()) {
+			}else if (param.getLocalPort() == ApplicationConfig.instance().getFtpPort()) {
 				FtpConnection connection = new FtpConnection();
 				connection.handle(param);
 			}else {

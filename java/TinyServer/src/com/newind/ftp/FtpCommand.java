@@ -99,8 +99,9 @@ public class FtpCommand {
 				}
 				cmdParaList.add(cmd.substring(start,end));
 				break;
+//			case "STOU":
+//				break;
 			case "STOR": //上传文件
-			case "STOU":
 				end = findPath(cmd, start);
 				if (end <= start) {
 					result = ERR_PARAM;

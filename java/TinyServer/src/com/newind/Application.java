@@ -10,49 +10,65 @@ public class Application {
 	private static Logger logger = LogManager.getLogger();
 	private static HttpServer httpServer;
 	private static FtpServer ftpServer;
-	/**
-	 * @param args
-	 */
+
+	public void startServer(String[] args) throws Exception{
+		System.out.println("hello");
+		ApplicationConfig config = ApplicationConfig.instance();
+		ApplicationPooling.setup(config.getThreadCount());
+		config.load(args);
+		httpServer = new HttpServer(config.getIp(), config.getHttpPort());
+		httpServer.start();
+		ftpServer = new FtpServer(config.getIp(), config.getFtpPort());
+		ftpServer.start();
+	}
+	
+	public void waitServer() throws InterruptedException{
+		System.out.println("running.");
+		if (null != httpServer) {
+			httpServer.join();
+			httpServer = null;
+		}
+		if (null != ftpServer) {
+			ftpServer.join();
+			ftpServer = null;
+		}
+		System.out.println("bye.");
+	}
+
+	public void closeServer(){
+		System.out.println("close server start.");
+		if (null != httpServer) {						
+			httpServer.close();
+		}
+		if (null != ftpServer) {
+			ftpServer.close();
+		}
+		ApplicationConfig.instance().setShuttingDown(true);
+		System.out.println("rlease workers start.");
+		ApplicationPooling.instance().release();
+		System.out.println("rlease workers end.");
+		System.out.println("close server end.");
+	}
+
+	public boolean isRunning(){
+		return ftpServer != null || httpServer != null;
+	}
+	
 	public static void main(String[] args) {
 		try {
-			System.out.println("hello");
-			ApplicationConfig config = ApplicationConfig.instacne();
-			ApplicationPooling.setup(config.getThreadCount());
-			config.load(args);
-			//TODO remove HTTP server
-			httpServer = new HttpServer(config.getIp(), config.getHttpPort());
-			httpServer.start();
-			ftpServer = new FtpServer(config.getIp(), config.getFtpPort());
-			ftpServer.start();
+			ApplicationConfig.instance().setRoot("D:\\MyProgram");
+			final Application application = new Application();
+			application.startServer(args);
 			Runtime.getRuntime().addShutdownHook(new Thread(){
 				@Override
 				public void run() {
-					System.out.println("receive quit signal.");
-					if (null != httpServer) {						
-						httpServer.close();
-					}
-					if (null != ftpServer) {
-						ftpServer.close();
-					}
-					ApplicationConfig.instacne().setShuttingDown(true);
-					System.out.println("rlease worker.");
-					ApplicationPooling.instance().release();
-					System.out.println("rlease worker <<");
-					System.out.println("rlease exit <<");
+					application.closeServer();
 				}
 			});
-			System.out.println("running.");
-			if (null != httpServer) {
-				httpServer.join();
-			}
-			if (null != ftpServer) {
-				ftpServer.join();
-			}
-			System.out.println("bye.");
+			application.waitServer();
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.info("bye on exception.");
 		} 
 	}
-
 }

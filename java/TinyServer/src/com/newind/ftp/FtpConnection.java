@@ -44,7 +44,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 
 	public static final String TAG = FtpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
-	private ApplicationConfig config = ApplicationConfig.instacne();
+	private ApplicationConfig config = ApplicationConfig.instance();
 	private byte[] buffer = new byte[config.getRecvBufferSize()];
 	private File currentDirectory = new File(config.getRoot());
 	private InputStream inputStream;
@@ -330,20 +330,20 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	
 	void onNLst(FtpCommand cmd) throws IOException{
 		if (ftpTrasportation == null) {
-			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
 			return;
 		}
 		try{
 			File target = checkAndGet(cmd.getParam(0));
 			ftpTrasportation.setTransport(target,MODE.NLST);
 		}catch (FileCheckFail e) {
-			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
 		}
 	}
 	
 	void onList(FtpCommand cmd) throws IOException{
 		if (ftpTrasportation == null) {
-			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
 			return;
 		}
 		try{
@@ -355,7 +355,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 				ftpTrasportation.setTransport(target,MODE.LIST);
 			}
 		}catch (FileCheckFail e) {
-			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
 		}
 	}
 	
@@ -372,6 +372,19 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		}
 	}
 	
+	void onStor(FtpCommand command) throws IOException{
+		if (ftpTrasportation == null) {
+			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
+			return;
+		}
+		try{
+			File target = checkAndGet(command.getParam(0));
+			ftpTrasportation.setTransport(target, MODE.UPLOAD);
+		}catch (FileCheckFail e) {
+			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
+		}
+	}
+	
 	void onSize(FtpCommand command) throws IOException{
 		try{
 			File target = checkAndGet(command.getParam(0));
@@ -382,7 +395,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		}catch (FileCheckFail e) {
 			// TODO: handle exception
 		}
-		sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
 	}
 	
 	void onQuit(FtpCommand cmd) throws IOException,CloseConnection{
@@ -410,8 +423,13 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 				ftpTrasportation = null;
 				break;
 			case FtpTrasportation.EVENT_ERR_CONN:
+				sendResponse(FtpResponse.FAIL_OPEN_DATA_CONNECTION);
+				break;
 			case FtpTrasportation.EVENT_ERR_FILE:
-				sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+				sendResponse(FtpResponse.FAIL_ON_IO_EXCEPTION);
+				break;
+			case FtpTrasportation.EVENT_ABOR_FILE:
+				sendResponse(FtpResponse.FAIL_ABOR_DATA_TRANSPORT);
 				break;
 			default:
 				break;

@@ -19,7 +19,7 @@ import com.newind.base.PoolingWorker;
 public class HttpConnection implements PoolingWorker<Socket>{
 	public static final String TAG = HttpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
-	private ApplicationConfig config = ApplicationConfig.instacne();
+	private ApplicationConfig config = ApplicationConfig.instance();
 	private byte[] buffer = new byte[config.getRecvBufferSize()]; 
 	private File rootFile = new File(config.getRoot());
 	private InputStream inputStream;
@@ -125,9 +125,12 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			return;
 		}
 		if (fileObject.isDirectory()) {
-			String listString = HttpResponse.listDirectoryInJS(fileObject, rootFile);
+//			String listString = HttpResponse.listDirectoryHTML(fileObject, rootFile);
+//			byte[] data = listString.getBytes("UTF-8");
+//			sendResponse(HttpResponse.OkayHtml(data.length));
+			String listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
 			byte[] data = listString.getBytes("UTF-8");
-			sendResponse(HttpResponse.OkayHtml(data.length));
+			sendResponse(HttpResponse.OkayFile(data.length, "application/json"));
 			//logger.info("sending dir:" + fileObject.getAbsolutePath() + "\n" + listString);
 			outputStream.write(data);
 		}else {

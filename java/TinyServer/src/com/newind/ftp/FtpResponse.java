@@ -4,8 +4,8 @@ public class FtpResponse {
 //	 110
 //  重新启动标记应答。在这种情况下文本是确定的，它必须是：MARK yyyy=mmmm，其中yyy
 //y是用户进程数据流标记，mmmm是服务器标记。
-//  
-//  
+//
+//
 //125
 //  数据连接已打开，准备传送
 //  
@@ -48,7 +48,7 @@ public class FtpResponse {
 //  
 //225
 //  数据连接打开，无传输正在进行
-	
+
 //  
 //226
 //  关闭数据连接，请求的文件操作成功
@@ -86,14 +86,18 @@ public class FtpResponse {
 //425
 //  不能打开数据连接
 //  
+	public static final String FAIL_OPEN_DATA_CONNECTION = "425 Can't open data connection.\r\n";
 //426
 //  关闭连接，中止传输
+	public static final String FAIL_ABOR_DATA_TRANSPORT = "426 Connection closed; transfer aborted.\r\n";
 //  
 //450
 //  请求的文件操作未执行
+	public static final String FAIL_NOT_TAKEN_ACTION = "450 equested file action not taken.\r\n";
 //  
 //451
 //  中止请求的操作：有本地错误
+	public static final String FAIL_ON_IO_EXCEPTION = "451 Requested action aborted: local error in processing.\r\n";
 //  
 //452
 //  未执行请求的操作：系统存储空间不足
@@ -126,7 +130,7 @@ public class FtpResponse {
 //  存储文件需要帐户信息
 //  
 //550
-//  未执行请求的操作 
+//  未执行请求的操作
 	public static final String ERR_NOT_TAKEN_ACTION = "550 Requested action not taken.\r\n";
 //  
 //551

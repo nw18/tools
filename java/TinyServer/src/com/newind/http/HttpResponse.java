@@ -15,14 +15,6 @@ public class HttpResponse {
     "<title>TinyServer</title>" + 
     "<style>a{{font-size:100%}}</style></head>" +
     "<body><table><tr><td>";
-	public static final String HTML_JS_HEAD = 
-			"<script type=\"text/javascript\">\n"
-			+ "var sp = \"&nbsp;&nbsp;</td><td>\";\n";
-	public static final String HTML_JS_TAIL =
-			"for(var i = 0; i < data.length;i++){ data[i][0] =  \"<a href='\" + cd + \"/\" + data[i][0] + \"'>\" + data[i][0] + \"</a>\"; }\n"
-			+ "for(var i = 0; i < data.length;i++){ data[i] = data[i].join(sp); }\n"
-			+ "document.write(data.join(\"</td></tr><tr><td>\"));\n"
-			+ "</script>\n";
 	public static final String HTML_TAIL = "</td></tr></table></body></html>";
 	public static final String HTML_COL_SPAN = "&nbsp;&nbsp;</td><td>";
 	public static final String HTML_ROW_SPAN = "</td></tr><tr><td>";
@@ -48,7 +40,7 @@ public class HttpResponse {
 		return String.format("HTTP/1.1 200 OK\r\nContent-type:text/plain\r\nContent-Length: %d\r\n\r\n%s",text.length(),text);
 	}
 	
-	public static String listDirectory(File dir,File root){
+	public static String listDirectoryHTML(File dir,File root){
 		StringBuilder stringBuilder = new StringBuilder();
 		File fileList[] = dir.listFiles(new FilenameFilter() {
 			@Override
@@ -97,8 +89,8 @@ public class HttpResponse {
 		return stringBuilder.toString();
 	}
 	
-	//make the directory list as a java script format resutl.
-	public static String listDirectoryInJS(File dir,File root){
+	//make the directory list as a JSON format result.
+	public static String listDirectoryJSON(File dir,File root){
 		StringBuilder stringBuilder = new StringBuilder();
 		File fileList[] = dir.listFiles(new FilenameFilter() {
 			@Override
@@ -108,46 +100,28 @@ public class HttpResponse {
 		});
 		String rootPath = root.getAbsolutePath();
 		try{
-			String current = dir.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
-			stringBuilder.append(HTML_HEAD);
-			stringBuilder.append("<a href=\""); 
+			String current = dir.getAbsolutePath().substring(rootPath.length()).replace('\\', '/'); 
 			String parent = current + "/..";
-			stringBuilder.append(parent);
-			stringBuilder.append("\">[Parent Directory]</a>");
-			stringBuilder.append(HTML_COL_SPAN);
-			stringBuilder.append("[Size]");
-			stringBuilder.append(HTML_COL_SPAN);
-			stringBuilder.append("[Modify]");
+			stringBuilder.append(String.format("{\"parent\":\"%s\",\n",parent));
+			stringBuilder.append("\"data\":[");
 			if(fileList != null && fileList.length != 0){
-				stringBuilder.append(HTML_ROW_SPAN);
-				stringBuilder.append(HTML_JS_HEAD);
-				stringBuilder.append(String.format("var cd=\"%s\"\n",current));
-				SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-				Date date = new Date(0);
-				stringBuilder.append("var data=[");
 				for(int i = 0; i < fileList.length; i++){
 					File file = fileList[i];
-					date.setTime(file.lastModified());
-					stringBuilder.append(String.format("['%s','%s','%s']",
+					stringBuilder.append(String.format("[%d,\"%s\",%d,%d]",
+							file.isDirectory() ? 1 : 0,
 							file.getName(),
-							file.isFile() ? String.valueOf(file.length()) : "",
-							timeFormat.format(date)
+							file.length(),
+							file.lastModified()
 							));
 					if (i != fileList.length - 1) {
 						stringBuilder.append(",\n");
-					}else {
-						stringBuilder.append("];\n");
 					}
 				}
-				stringBuilder.append(HTML_JS_TAIL);
-			}else {
-				stringBuilder.append(HTML_ROW_SPAN_EMPTY);
-				stringBuilder.append("nothing");
 			}
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		stringBuilder.append(HTML_TAIL);
+		stringBuilder.append("]}");
 		return stringBuilder.toString();
 	}
 }

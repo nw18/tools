@@ -24,9 +24,10 @@ public abstract class FtpTrasportation extends Thread{
 	public static final int EVENT_OK_FILE_STATUS = 2;
 	public static final int EVENT_OK_FILE = 3;
 	public static final int EVENT_ERR_FILE = -2;
+	public static final int EVENT_ABOR_FILE = -3;
 	public static final int EVENT_EXIT = 0;
 	protected Logger logger = LogManager.getLogger();
-	protected ApplicationConfig config = ApplicationConfig.instacne();
+	protected ApplicationConfig config = ApplicationConfig.instance();
 	protected Socket socket = null;
 	protected Callback callback = null;
 	protected Thread taskThread = null;
@@ -75,9 +76,8 @@ public abstract class FtpTrasportation extends Thread{
 			}
 		}
 		
-		if ((workMode == MODE.UPLOAD && !target.canWrite())|| //upload but can't write
-				(!target.exists()) || //not exists
-				(workMode == MODE.DOWNLOAD && !target.canRead())|| //download but can't read
+		if ((workMode == MODE.UPLOAD && target.exists() && (!target.isFile() || !target.canWrite()))|| //upload but can't write
+				(workMode != MODE.UPLOAD && !target.canRead())|| //download but can't read
 				(target.isDirectory() && workMode != MODE.LIST && workMode != MODE.NLST)) {//download or upload a non dir.
 			callback.onResult(EVENT_ERR_FILE);
 			callback.onResult(EVENT_EXIT);
@@ -109,7 +109,7 @@ public abstract class FtpTrasportation extends Thread{
 		if (isTransing) {
 			callback.onResult(EVENT_OK_FILE);
 		} else {
-			callback.onResult(EVENT_ERR_FILE);
+			callback.onResult(EVENT_ABOR_FILE);
 		}
 		callback.onResult(EVENT_EXIT);
 	}

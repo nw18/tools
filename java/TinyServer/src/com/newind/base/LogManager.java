@@ -11,20 +11,22 @@ public class LogManager {
 	/**
 	 * 初始化logger
 	 */
-	
 	static{
+		FileHandler fileHandler = null;
 		if(!LOG_FILE_PATH.equals("")){
-			FileHandler fileHandler;
 			try {
-				fileHandler = new FileHandler();
+				fileHandler = new FileHandler(LOG_FILE_PATH);
 				fileHandler.setLevel(Level.ALL);
 				getLogger().addHandler(fileHandler);
 			} catch (SecurityException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
+			}catch (Exception e){
+				e.printStackTrace();
 			}
-		}else{
+		}
+		if (null == fileHandler){
 			ConsoleHandler consoleHandler = new ConsoleHandler();
 			consoleHandler.setLevel(Level.INFO);
 			getLogger().addHandler(consoleHandler);
