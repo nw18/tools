@@ -56,7 +56,7 @@ public class Application {
 	
 	public static void main(String[] args) {
 		try {
-			ApplicationConfig.instance().setRoot("D:\\MyProgram");
+			ApplicationConfig.instance().setRoot("X:\\code_back");
 			final Application application = new Application();
 			application.startServer(args);
 			Runtime.getRuntime().addShutdownHook(new Thread(){

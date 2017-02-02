@@ -3,6 +3,8 @@ package com.newind.ftp;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.newind.util.TextUtil;
+
 public class FtpCommand {
 	private static final String CRLF = "\r\n";
 	private static final String SPCRLF = " \t\b\r\n";
@@ -47,7 +49,7 @@ public class FtpCommand {
 	private String cmdName;
 	private List<String> cmdParaList = new ArrayList<String>();
 	
-	public void parse(String cmd){
+	public void parse(String cmd) {
 		while(true){
 			int end = -1;
 			int pos = findCmdName(cmd,0);
@@ -56,6 +58,7 @@ public class FtpCommand {
 				response = FtpResponse.ERR_COMMAND_FORMAT;
 				break;
 			}
+			result = OK; // INIT the result to okay.
 			cmdName = cmd.substring(0, pos);
 			int start = pos + 1;
 			switch (cmdName.toUpperCase()) {
@@ -263,12 +266,35 @@ public class FtpCommand {
 				}
 				cmdParaList.add(cmd.substring(start, end));
 				break;
+			case "OPTS":
+				end = findParam(cmd, start);
+				if (end <= start) {
+					result = ERR_FORMAT;
+					response = FtpResponse.ERR_COMMAND_FORMAT;
+					break;
+				}
+				String codeType = cmd.substring(start, end);
+				start = end + 1;
+				end = findParam(cmd, start);
+				if (end <= start) {
+					result = ERR_PARAM;
+					response = FtpResponse.ERR_COMMAND_PARAMETERS;
+					break;
+				}
+				String onOff = cmd.substring(start, end);
+				if (TextUtil.equal(codeType.toLowerCase(), "utf8") && TextUtil.equal(onOff.toLowerCase(), "on")) {
+					result = ERR;
+					response = FtpResponse.OK_COMMAND;
+				}else {
+					result = ERR_PARAM;
+					response = FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER;
+				}
+				break;
 			default:
 				result = -2;
 				response = FtpResponse.ERR_COMMAND_NOT_IMPLEMENT;
 				break;
 			}
-			result = 0;
 			break;
 		}
 	}

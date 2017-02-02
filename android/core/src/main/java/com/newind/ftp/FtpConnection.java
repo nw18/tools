@@ -51,6 +51,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	private OutputStream outputStream;
 	private static Map<String, Method> actionMap = new HashMap<>();
 	private WorkStatus workStatus = WorkStatus.Init;
+	private File renamingFile = null;
 	private FtpTrasportation ftpTrasportation;
 	private String userName;
 	private Socket socket;
@@ -261,10 +262,14 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		}else {			
 			curPath = curPath.replace('\\', '/');
 		}
-		sendResponse(String.format(FtpResponse.OK_FILE_PATH, curPath));
+		sendResponse(String.format(FtpResponse.OK_FILE_CREATED, curPath));
 	}
 	
 	void onCDUP(FtpCommand command) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		try{
 			currentDirectory = checkAndGet("..");
 		}catch (FileCheckFail e) {
@@ -280,6 +285,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	}
 	
 	void onCWD(FtpCommand command) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		File target = null;
 		try{
 			target = checkAndGet(command.getParam(0));
@@ -298,6 +307,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	}
 	
 	void onPasv(FtpCommand cmd) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		ServerSocket socket = new ServerSocket(0);
 		try {
 			ftpTrasportation = new FtpTrasportation.PASV(socket);
@@ -317,6 +330,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	}
 	
 	void onPort(FtpCommand cmd) throws IOException,Exception{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		String ip = cmd.getParam(0);
 		ip += "." + cmd.getParam(1);
 		ip += "." + cmd.getParam(2);
@@ -329,6 +346,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	}
 	
 	void onNLst(FtpCommand cmd) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		if (ftpTrasportation == null) {
 			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
 			return;
@@ -342,6 +363,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	}
 	
 	void onList(FtpCommand cmd) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		if (ftpTrasportation == null) {
 			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
 			return;
@@ -360,6 +385,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	}
 	
 	void onRetr(FtpCommand cmd) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		if (ftpTrasportation == null) {
 			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
 			return;
@@ -372,20 +401,126 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		}
 	}
 	
+	//write able commands begin
 	void onStor(FtpCommand command) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		if (ftpTrasportation == null) {
-			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
 			return;
 		}
 		try{
 			File target = checkAndGet(command.getParam(0));
 			ftpTrasportation.setTransport(target, MODE.UPLOAD);
 		}catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		}
+	}
+	
+	void onMKD(FtpCommand command) throws IOException {
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		try {
+			File target = checkAndGet(command.getParam(0));
+			if(target.mkdirs()){
+				sendResponse(String.format(FtpResponse.OK_FILE_CREATED, command.getParam(0)));
+			}else {
+				sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
+			}
+		} catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		} catch (SecurityException e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		}
+	}
+	
+	void onRNFR(FtpCommand command) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		try{
+			File target = checkAndGet(command.getParam(0));
+			if (!target.exists()) {
+				sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
+			}else {
+				workStatus = WorkStatus.RenameFrom;
+				renamingFile = target;
+				sendResponse(FtpResponse.PEND_NEXT_FILE_ACTION);
+			}
+		}catch (FileCheckFail e) {
 			sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
 		}
 	}
 	
+	void onRNTO(FtpCommand command) throws IOException{
+		if (workStatus != WorkStatus.RenameFrom) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		if (renamingFile == null) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
+		}
+		workStatus = WorkStatus.LogOn;
+		try{
+			File target = checkAndGet(command.getParam(0));
+			if(renamingFile.renameTo(target)){
+				sendResponse(String.format(FtpResponse.OK_FILE_OPERATION_EX,command.getParam(0),"renamed"));
+			}else {
+				sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
+			}
+		}catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		}
+		renamingFile = null;
+	}
+	
+	void onRMD(FtpCommand command) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		try {
+			File target = checkAndGet(command.getParam(0));
+			if (target.exists() && target.isDirectory() && target.delete()) {
+				sendResponse(String.format(FtpResponse.OK_FILE_OPERATION_EX,command.getParam(0),"removed"));
+			}else {
+				sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			}
+		} catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		}
+	}
+	
+	void onDele(FtpCommand command) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		try {
+			File target = checkAndGet(command.getParam(0));
+			if (target.exists() && target.isFile() && target.delete()) {
+				sendResponse(String.format(FtpResponse.OK_FILE_OPERATION_EX,command.getParam(0),"deleted"));
+			}else {
+				sendResponse(FtpResponse.FAIL_NOT_TAKEN_ACTION);
+			}
+		} catch (FileCheckFail e) {
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+		}
+		
+	}
+	
+	//write able commands end
 	void onSize(FtpCommand command) throws IOException{
+		if (workStatus != WorkStatus.LogOn) {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
 		try{
 			File target = checkAndGet(command.getParam(0));
 			if (target.exists() && target.isFile()) {

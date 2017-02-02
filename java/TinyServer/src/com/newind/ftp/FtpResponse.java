@@ -67,7 +67,7 @@ public class FtpResponse {
 //  
 //257
 //  创建"PATHNAME"
-	public static final String OK_FILE_PATH = "257 %s\r\n";
+	public static final String OK_FILE_CREATED = "257 \"%s\" created\r\n";
 //  
 //331
 //  用户名正确，需要口令
@@ -78,6 +78,7 @@ public class FtpResponse {
 //  
 //350
 //  请求的文件操作需要进一步命令
+	public static final String PEND_NEXT_FILE_ACTION = "350 Requested file action pending further information.\r\n";
 //  
 //421
 //  不能提供服务，关闭控制连接
