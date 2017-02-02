@@ -6,10 +6,10 @@ import java.sql.Date;
 import java.text.SimpleDateFormat;
 
 public class HttpResponse {
-	public static final String _INNER_LOGO_ = "favicon.ico";
+	public static final String FAVICON = "favicon.ico";
 	public static final String HTML_HEAD = "<html>" +
     "<head>" + 
-	"<link href=\"/" + _INNER_LOGO_ + "\" type=\"image/x-icon\" rel=icon>" +
+	"<link href=\"/" + FAVICON + "\" type=\"image/x-icon\" rel=icon>" +
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />" +
     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>" +
     "<title>TinyServer</title>" + 
