@@ -7,14 +7,11 @@ import java.text.SimpleDateFormat;
 
 public class HttpResponse {
 	public static final String FAVICON = "favicon.ico";
-	public static final String HTML_HEAD = "<html>" +
-    "<head>" + 
-	"<link href=\"/" + FAVICON + "\" type=\"image/x-icon\" rel=icon>" +
-    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />" +
-    "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>" +
-    "<title>TinyServer</title>" + 
-    "<style>a{{font-size:100%}}</style></head>" +
-    "<body><table><tr><td>";
+	public static final String HTML_HEAD = "<!DOCTYPE html><html><head>"
+			+ "<link href=\"/" + FAVICON + "\" type=\"image/x-icon\" rel=icon>"
+			+ "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />"
+			+ "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>" + "<title>TinyServer</title>"
+			+ "<style>a{{font-size:100%}}</style></head>" + "<body><table><tr><td>";
 	public static final String HTML_TAIL = "</td></tr></table></body></html>";
 	public static final String HTML_COL_SPAN = "&nbsp;&nbsp;</td><td>";
 	public static final String HTML_ROW_SPAN = "</td></tr><tr><td>";

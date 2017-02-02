@@ -57,7 +57,8 @@ public class Application {
 	public static void main(String[] args) {
 		try {
 			ApplicationConfig config = ApplicationConfig.instance();
-			config.setRoot("X:\\code_back");
+			//config.setRoot("X:\\code_back");
+			config.setRoot("D:\\MyProgram");
 			config.setWritable(true);
 			config.setJsonMode(true);
 			final Application application = new Application();
