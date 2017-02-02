@@ -63,7 +63,7 @@ public abstract class FtpTrasportation extends Thread{
 	public void run() {
 		while(true){
 			synchronized (this) {
-				if(target != null){
+				if(!isTransing || target != null){
 					break;
 				}				
 			}
@@ -75,7 +75,10 @@ public abstract class FtpTrasportation extends Thread{
 				return;
 			}
 		}
-		
+		if (!isTransing) {
+			callback.onResult(EVENT_EXIT);
+			return;
+		}
 		if ((workMode == MODE.UPLOAD && target.exists() && (!target.isFile() || !target.canWrite()))|| //upload but can't write
 				(workMode != MODE.UPLOAD && !target.canRead())|| //download but can't read
 				(target.isDirectory() && workMode != MODE.LIST && workMode != MODE.NLST)) {//download or upload a non dir.
@@ -136,10 +139,10 @@ public abstract class FtpTrasportation extends Thread{
 				String line = String.format("%c%c%cxr--r-- 1 tiny tiny %d %s %s\r\n", 
 						file.isDirectory() ? 'd' : '-',file.canRead() ? 'r' : '-' , file.canWrite() ? 'w' : '-',
 						file.length() , dateStr , file.getName());
-				outputStream.write(line.getBytes("UTF-8"));
+				outputStream.write(line.getBytes(config.getCodeType()));
 				System.out.print(line);
 			}else {
-				outputStream.write(String.format("%s\r\n", file.getName()).getBytes("UTF-8"));
+				outputStream.write(String.format("%s\r\n", file.getName()).getBytes(config.getCodeType()));
 			}
 		}
 		outputStream.flush();
@@ -198,6 +201,11 @@ public abstract class FtpTrasportation extends Thread{
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
+			try {
+				join();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		@Override
@@ -206,7 +214,9 @@ public abstract class FtpTrasportation extends Thread{
 				socket = serverSocket.accept();
 				serverSocket.close();
 				if (!isTransing) {
-					throw new Exception("manual exit.");
+					socket.close();
+					callback.onResult(EVENT_EXIT);
+					return;
 				}
 			}catch(Exception e){
 				try{
@@ -235,6 +245,11 @@ public abstract class FtpTrasportation extends Thread{
 		@Override
 		public void cancel() {
 			isTransing = false;
+			try {				
+				join();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		@Override

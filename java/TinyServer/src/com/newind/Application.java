@@ -56,7 +56,10 @@ public class Application {
 	
 	public static void main(String[] args) {
 		try {
-			ApplicationConfig.instance().setRoot("X:\\code_back");
+			ApplicationConfig config = ApplicationConfig.instance();
+			config.setRoot("X:\\code_back");
+			config.setWritable(true);
+			config.setJsonMode(true);
 			final Application application = new Application();
 			application.startServer(args);
 			Runtime.getRuntime().addShutdownHook(new Thread(){

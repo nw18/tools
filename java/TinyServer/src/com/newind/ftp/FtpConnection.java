@@ -127,6 +127,11 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			e.printStackTrace();
 		}finally {
 			socket = null;
+			//recycle the data transport thread.
+			if (ftpTrasportation != null) {
+				ftpTrasportation.cancel();
+				ftpTrasportation = null;
+			}
 		}
 	}
 	
@@ -141,7 +146,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	void sendResponse(String responseString) throws IOException {
 		//TODO debug info
 		System.out.println("sendResponse:\n" + responseString);
-		outputStream.write(responseString.getBytes("UTF-8"));
+		outputStream.write(responseString.getBytes(config.getCodeType()));
 		outputStream.flush();
 	}
 	
@@ -162,7 +167,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	
 	File checkAndGet(String path) throws IOException{
 		String absPath;
-		path = URLDecoder.decode(path, "UTF-8");
+		path = URLDecoder.decode(path, config.getCodeType());
 		if (path.startsWith("/") || path.startsWith("\\")) {
 			absPath = config.getRoot() + path;
 		}else{
@@ -201,14 +206,22 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	
 	String getFilePath(File target) throws UnsupportedEncodingException{
 		String absPath = target.getAbsolutePath().substring(config.getRoot().length());
-		return URLEncoder.encode(absPath.replace('\\', '/'),"UTF-8");
+		return URLEncoder.encode(absPath.replace('\\', '/'),config.getCodeType());
 	}
 	
 	void onUser(FtpCommand cmd) throws IOException {
 		this.userName = cmd.getParam(0);
 		System.out.println("onUser " + userName);
-		workStatus = WorkStatus.WaitPass;
-		sendResponse(FtpResponse.PEND_PASS_WORD);
+		if (TextUtil.equal(userName,config.getUserName())) {
+			if (TextUtil.isEmpty(config.getPassWord())){
+				sendResponse(FtpResponse.OK_USER_LOGON);
+			}else {
+				workStatus = WorkStatus.WaitPass;
+				sendResponse(FtpResponse.PEND_PASS_WORD);
+			}
+		}else {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+		}
 	}
 
 	void onPass(FtpCommand cmd) throws IOException{
@@ -218,8 +231,12 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		}
 		String passWord = cmd.getParam(0);
 		System.out.println("onPass " + passWord);
-		workStatus = WorkStatus.LogOn;
-		sendResponse(FtpResponse.OK_USER_LOGON);
+		if (TextUtil.equal(passWord,config.getPassWord())) {
+			workStatus = WorkStatus.LogOn;
+			sendResponse(FtpResponse.OK_USER_LOGON);
+		}else {
+			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+		}
 	}
 	
 	void onSyst(FtpCommand cmd) throws IOException{
@@ -313,6 +330,11 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		}
 		ServerSocket socket = new ServerSocket(0);
 		try {
+			//quit the origin data connection
+			if (ftpTrasportation != null) {
+				ftpTrasportation.cancel();
+				ftpTrasportation = null;
+			}
 			ftpTrasportation = new FtpTrasportation.PASV(socket);
 			int port = socket.getLocalPort();
 			String ipAddrss = this.socket.getLocalAddress().getHostAddress();
@@ -333,6 +355,11 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		if (workStatus != WorkStatus.LogOn) {
 			sendResponse(FtpResponse.ERR_NOT_LOGIN);
 			return;
+		}
+		//quit the origin data connection
+		if (ftpTrasportation != null) {
+			ftpTrasportation.cancel();
+			ftpTrasportation = null;
 		}
 		String ip = cmd.getParam(0);
 		ip += "." + cmd.getParam(1);
@@ -407,6 +434,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			sendResponse(FtpResponse.ERR_NOT_LOGIN);
 			return;
 		}
+		if (!config.isWritable()){
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
+		}
 		if (ftpTrasportation == null) {
 			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
 			return;
@@ -422,6 +453,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	void onMKD(FtpCommand command) throws IOException {
 		if (workStatus != WorkStatus.LogOn) {
 			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		if (!config.isWritable()){
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
 			return;
 		}
 		try {
@@ -441,6 +476,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	void onRNFR(FtpCommand command) throws IOException{
 		if (workStatus != WorkStatus.LogOn) {
 			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		if (!config.isWritable()){
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
 			return;
 		}
 		try{
@@ -485,6 +524,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			sendResponse(FtpResponse.ERR_NOT_LOGIN);
 			return;
 		}
+		if (!config.isWritable()){
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
+			return;
+		}
 		try {
 			File target = checkAndGet(command.getParam(0));
 			if (target.exists() && target.isDirectory() && target.delete()) {
@@ -500,6 +543,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	void onDele(FtpCommand command) throws IOException{
 		if (workStatus != WorkStatus.LogOn) {
 			sendResponse(FtpResponse.ERR_NOT_LOGIN);
+			return;
+		}
+		if (!config.isWritable()){
+			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
 			return;
 		}
 		try {

@@ -85,7 +85,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	
 	private void sendResponse(String str) throws Exception{
 		logger.info(str);
-		outputStream.write(str.getBytes("UTF-8"));
+		outputStream.write(str.getBytes(config.getCodeType()));
 		outputStream.flush();
 	}
 	
@@ -101,11 +101,11 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			sendResponse(HttpResponse.BadRequest());
 			throw new RuntimeException("bad http request:" + fields[0]);
 		}
-		String filePath = URLDecoder.decode(method[1],"UTF-8");
+		String filePath = URLDecoder.decode(method[1],config.getCodeType());
 		if (filePath.startsWith("/")) {
 			filePath = filePath.substring(1);
 		}
-		if (filePath.equals(HttpResponse._INNER_LOGO_)) {
+		if (filePath.equals(HttpResponse.FAVICON)) {
 			if (config.getTinyLogo() == null) {
 				sendResponse(HttpResponse.FileNotFound());
 			}else {
@@ -116,7 +116,6 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			return;
 		}
 		File fileObject = filePath.equals("") ? rootFile : new File(rootFile,filePath);
-
 		if (!fileObject.exists() 
 				|| fileObject.isHidden()
 				|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
@@ -125,12 +124,17 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			return;
 		}
 		if (fileObject.isDirectory()) {
-//			String listString = HttpResponse.listDirectoryHTML(fileObject, rootFile);
-//			byte[] data = listString.getBytes("UTF-8");
-//			sendResponse(HttpResponse.OkayHtml(data.length));
-			String listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
-			byte[] data = listString.getBytes("UTF-8");
-			sendResponse(HttpResponse.OkayFile(data.length, "application/json"));
+			byte[] data;
+			String listString;
+			if (config.isJsonMode()) {
+				listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
+				data = listString.getBytes(config.getCodeType());
+				sendResponse(HttpResponse.OkayFile(data.length, "application/json"));
+			}else {
+				listString = HttpResponse.listDirectoryHTML(fileObject, rootFile);
+				data = listString.getBytes(config.getCodeType());
+				sendResponse(HttpResponse.OkayHtml(data.length));
+			}
 			//logger.info("sending dir:" + fileObject.getAbsolutePath() + "\n" + listString);
 			outputStream.write(data);
 		}else {

@@ -18,7 +18,10 @@ public class ApplicationConfig {
 	private int recvTimeout = 5 * 1000;
 	private int connectionTimeout = 5 * 60 * 1000;
 	private String userName = "admin";
-	private String passWork = "123456";
+	private String passWord = "123456";
+	private boolean writable = false;
+	private boolean jsonMode = true;
+	private String codeType = "UTF-8";
 	
 	public static ApplicationConfig instance() {
 		if(null == _config_){
@@ -127,14 +130,38 @@ public class ApplicationConfig {
 		this.userName = userName;
 	}
 	
-	public String getPassWork() {
-		return passWork;
+	public String getPassWord() {
+		return passWord;
 	}
 	
-	public void setPassWork(String passWork) {
-		this.passWork = passWork;
+	public void setPassWord(String passWord) {
+		this.passWord = passWord;
+	}
+
+	public boolean isWritable() {
+		return writable;
+	}
+
+	public void setWritable(boolean writable) {
+		this.writable = writable;
 	}
 	
+	public boolean isJsonMode() {
+		return jsonMode;
+	}
+	
+	public void setJsonMode(boolean jsonMode) {
+		this.jsonMode = jsonMode;
+	}
+	
+	public String getCodeType() {
+		return codeType;
+	}
+	
+	public void setCodeType(String codeType) {
+		this.codeType = codeType;
+	}
+
 	//the LOGO data.
 	private byte tinyLogo[] = new byte[] { 80, 75, 3, 4, 20, 0, 0, 0, 8, 0, 35, -73, 44, 74, 2, -115, 28, 23, 63, 10, 0,
 			0, 62, 66, 0, 0, 8, 0, 0, 0, 108, 111, 103, 111, 46, 105, 99, 111, -19, 91, 15, 104, -108, 87, 18, 31, 115,
