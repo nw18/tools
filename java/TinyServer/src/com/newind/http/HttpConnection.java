@@ -15,6 +15,7 @@ import com.newind.ApplicationConfig;
 import com.newind.base.LogManager;
 import com.newind.base.Mime;
 import com.newind.base.PoolingWorker;
+import com.newind.util.TextUtil;
 
 public class HttpConnection implements PoolingWorker<Socket>{
 	public static final String TAG = HttpConnection.class.getSimpleName();
@@ -115,13 +116,22 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			}
 			return;
 		}
-		File fileObject = filePath.equals("") ? rootFile : new File(rootFile,filePath);
-		if (!fileObject.exists() 
-				|| fileObject.isHidden()
-				|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
-			logger.info(config.getRoot() + "\n" + fileObject.getAbsolutePath());
-			sendResponse(HttpResponse.FileNotFound());
-			return;
+		File fileObject = null;
+		if (filePath.startsWith("?")) {
+			fileObject = config.getInnerFile(filePath.substring(1));
+			if (null == fileObject) {
+				sendResponse(HttpResponse.FileNotFound());
+				return;
+			}
+		}else {
+			fileObject = TextUtil.isEmpty(filePath) ? rootFile : new File(rootFile,filePath);
+			if (!fileObject.exists() 
+					|| fileObject.isHidden()
+					|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
+				logger.info(config.getRoot() + "\n" + fileObject.getAbsolutePath());
+				sendResponse(HttpResponse.FileNotFound());
+				return;
+			}
 		}
 		if (fileObject.isDirectory()) {
 			byte[] data;

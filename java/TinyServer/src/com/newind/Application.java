@@ -1,5 +1,6 @@
 package com.newind;
 
+import java.io.File;
 import java.util.logging.Logger;
 
 import com.newind.base.LogManager;
@@ -16,10 +17,14 @@ public class Application {
 		ApplicationConfig config = ApplicationConfig.instance();
 		ApplicationPooling.setup(config.getThreadCount());
 		config.load(args);
-		httpServer = new HttpServer(config.getIp(), config.getHttpPort());
-		httpServer.start();
-		ftpServer = new FtpServer(config.getIp(), config.getFtpPort());
-		ftpServer.start();
+		if (config.isHttpOn()) {			
+			httpServer = new HttpServer(config.getIp(), config.getHttpPort());
+			httpServer.start();
+		}
+		if (config.isFtpOn()) {			
+			ftpServer = new FtpServer(config.getIp(), config.getFtpPort());
+			ftpServer.start();
+		}
 	}
 	
 	public void waitServer() throws InterruptedException{
@@ -58,6 +63,7 @@ public class Application {
 		try {
 			ApplicationConfig config = ApplicationConfig.instance();
 			//config.setRoot("X:\\code_back");
+			config.loadInnerDir(new File(".\\res"));
 			config.setRoot("D:\\MyProgram");
 			config.setWritable(true);
 			config.setJsonMode(true);
@@ -73,6 +79,6 @@ public class Application {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.info("bye on exception.");
-		} 
+		}
 	}
 }

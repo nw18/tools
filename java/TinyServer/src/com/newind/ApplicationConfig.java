@@ -2,7 +2,10 @@ package com.newind;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -22,6 +25,9 @@ public class ApplicationConfig {
 	private boolean writable = false;
 	private boolean jsonMode = true;
 	private String codeType = "UTF-8";
+	private boolean ftpOn = true;
+	private boolean httpOn = true;
+	private Map<String, File> innerDir = new HashMap<>(); 
 	
 	public static ApplicationConfig instance() {
 		if(null == _config_){
@@ -31,13 +37,13 @@ public class ApplicationConfig {
 	}
 	
 	public void load(String argv[]) throws Exception{
-		for(String arg : argv){
-			int pos = arg.indexOf(':');
-			if (pos <= 0) {
-				throw new Exception("bad parameter :\n" + arg);
-			}
-			String value = arg.substring(pos + 1);
-			switch (arg.substring(0, pos)) {
+		if (argv == null) {
+			return;
+		}
+		for(int i = 0; i < argv.length; i+=2){
+			String key = argv[i];
+			String value = argv[i+1];
+			switch (key) {
 			case "root":
 				while (value.endsWith("/") || value.endsWith("\\")) {
 					value = value.substring(0, value.length() - 2);
@@ -48,14 +54,38 @@ public class ApplicationConfig {
 				}
 				root = value;
 				break;
+			case "ip":
+				ip = value;
+				break;
 			case "http_port":
 				httpPort = Integer.parseInt(value);
 				break;
 			case "ftp_port":
 				ftpPort = Integer.parseInt(value);
 				break;
-			case "thread":
+			case "thread_count":
 				threadCount = Integer.parseInt(value);
+				break;
+			case "json_mode":
+				jsonMode = Boolean.parseBoolean(value);
+				break;
+			case "writable":
+				writable = Boolean.parseBoolean(value);
+				break;
+			case "code_type":
+				codeType = value;
+				break;
+			case "user_name":
+				userName = value;
+				break;
+			case "pass_word":
+				passWord = value;
+				break;
+			case "ftp_on":
+				ftpOn = Boolean.parseBoolean(value);
+				break;
+			case "http_on":
+				httpOn = Boolean.parseBoolean(value);
 				break;
 			default:
 				break;
@@ -68,6 +98,24 @@ public class ApplicationConfig {
 		if (root.endsWith("/.") || root.endsWith("\\.")) {
 			root = root.substring(0, root.length() - 2);
 		}
+	}
+	
+	public void loadInnerDir(File dir){
+		File[] fileList = dir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File file, String fileName) {
+				return new File(file,fileName).isFile() && !fileName.startsWith(".");
+			}
+		});
+		System.out.println("load inner:" + dir.getAbsolutePath());
+		for(File file : fileList){
+			System.out.println(file.getName());
+			innerDir.put(file.getName(), file);
+		}
+	}
+	
+	public File getInnerFile(String fileName){
+		return innerDir.get(fileName);
 	}
 	
 	public String getRoot() {
@@ -160,6 +208,22 @@ public class ApplicationConfig {
 	
 	public void setCodeType(String codeType) {
 		this.codeType = codeType;
+	}
+	
+	public boolean isFtpOn() {
+		return ftpOn;
+	}
+	
+	public void setFtpOn(boolean ftpOn) {
+		this.ftpOn = ftpOn;
+	}
+	
+	public boolean isHttpOn() {
+		return httpOn;
+	}
+	
+	public void setHttpOn(boolean httpOn) {
+		this.httpOn = httpOn;
 	}
 
 	//the LOGO data.
