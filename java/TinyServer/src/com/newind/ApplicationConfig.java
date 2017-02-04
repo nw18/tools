@@ -45,9 +45,6 @@ public class ApplicationConfig {
 			String value = argv[i+1];
 			switch (key) {
 			case "root":
-				while (value.endsWith("/") || value.endsWith("\\")) {
-					value = value.substring(0, value.length() - 2);
-				}
 				File file = new File(value);
 				if (!(file.exists() && file.isDirectory())) {
 					throw new Exception(value + " not exists or unaccessable.");

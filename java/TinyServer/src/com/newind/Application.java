@@ -1,5 +1,6 @@
 package com.newind;
 
+import java.io.File;
 import java.util.logging.Logger;
 
 import com.newind.base.LogManager;
@@ -27,7 +28,7 @@ public class Application {
 	}
 	
 	public void waitServer() throws InterruptedException{
-		System.out.println("running.");
+		System.out.println("waitServer.");
 		if (null != httpServer) {
 			httpServer.join();
 			httpServer = null;
@@ -61,8 +62,8 @@ public class Application {
 	public static void main(String[] args) {
 		try {
 			ApplicationConfig config = ApplicationConfig.instance();
-			//config.setRoot("X:\\code_back");
-			config.setRoot("D:\\MyProgram");
+			config.setRoot("X:\\code_back"); //no end separator
+			//config.setRoot("D:\\");//with end separator.
 			config.setWritable(true);
 			config.setJsonMode(true);
 			final Application application = new Application();

@@ -138,7 +138,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		}else {
 			fileObject = TextUtil.isEmpty(filePath) ? rootFile : new File(rootFile,filePath);
 			if (!fileObject.exists() 
-					|| fileObject.isHidden()
+					|| filePath.startsWith(".")
 					|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
 				logger.info(config.getRoot() + "\n" + fileObject.getAbsolutePath());
 				sendResponse(HttpResponse.FileNotFound());
