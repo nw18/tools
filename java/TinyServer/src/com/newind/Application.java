@@ -1,6 +1,5 @@
 package com.newind;
 
-import java.io.File;
 import java.util.logging.Logger;
 
 import com.newind.base.LogManager;
@@ -63,7 +62,6 @@ public class Application {
 		try {
 			ApplicationConfig config = ApplicationConfig.instance();
 			//config.setRoot("X:\\code_back");
-			config.loadInnerDir(new File(".\\res"));
 			config.setRoot("D:\\MyProgram");
 			config.setWritable(true);
 			config.setJsonMode(true);

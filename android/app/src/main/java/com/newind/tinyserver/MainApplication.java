@@ -18,11 +18,12 @@ public class MainApplication extends Application {
     public void onCreate() {
         server = new com.newind.Application();
         LogManager.LOG_FILE_PATH  = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + LogManager.LOG_FILE_PATH;
-        ApplicationConfig.instance().setRoot(Environment.getExternalStorageDirectory().getAbsolutePath());
         server = new com.newind.Application();
-        // TODO: 2017/1/30 test code.
         try {
-            server.startServer(new String[0]);
+            server.startServer(new String[]{
+                    "root" , Environment.getExternalStorageDirectory().getAbsolutePath(),
+                    "json" , "true"
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }

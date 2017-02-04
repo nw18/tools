@@ -2,6 +2,7 @@ package com.newind.http;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -107,22 +108,33 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			filePath = filePath.substring(1);
 		}
 		if (filePath.equals(HttpResponse.FAVICON)) {
-			if (config.getTinyLogo() == null) {
+			byte[] data = config.getResource(HttpResponse.FAVICON);
+			if (data == null) { //TODO fix this code.
 				sendResponse(HttpResponse.FileNotFound());
 			}else {
-				sendResponse(HttpResponse.OkayFile(config.getTinyLogo().length, Mime.toContentType("png")));
-				outputStream.write(config.getTinyLogo());
+				sendResponse(HttpResponse.OkayFile(data.length, Mime.toContentType("png")));
+				outputStream.write(data);
 				System.out.println("aha tiny logo !!!");
 			}
 			return;
 		}
 		File fileObject = null;
 		if (filePath.startsWith("?")) {
-			fileObject = config.getInnerFile(filePath.substring(1));
-			if (null == fileObject) {
+			byte[] data = config.getResource(filePath.substring(1));
+			if (null == data) {
 				sendResponse(HttpResponse.FileNotFound());
-				return;
+			}else {
+				String extString = filePath;
+				int pos = extString.lastIndexOf('.');
+				if (pos < 0) {
+					extString = Mime.toContentType("");
+				}else {				
+					extString = Mime.toContentType(extString.substring(pos + 1));
+				}
+				sendResponse(HttpResponse.OkayFile(data.length, extString));
+				outputStream.write(data);
 			}
+			return;
 		}else {
 			fileObject = TextUtil.isEmpty(filePath) ? rootFile : new File(rootFile,filePath);
 			if (!fileObject.exists() 
@@ -157,12 +169,16 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			}
 			sendResponse(HttpResponse.OkayFile(fileObject.length(), extString));
 			FileInputStream fileStream = new FileInputStream(fileObject);
-			int len = 0;
-			//logger.info("sending file:" + fileObject.getAbsolutePath());
-			while((len = fileStream.read(buffer,0,buffer.length)) > 0){
-				outputStream.write(buffer, 0, len);
-			}
-			fileStream.close();
+			sendResponse(fileStream);
 		}
+	}
+	
+	private void sendResponse(InputStream stream) throws IOException {
+		int len = 0;
+		//logger.info("sending file:" + fileObject.getAbsolutePath());
+		while((len = stream.read(buffer,0,buffer.length)) > 0){
+			outputStream.write(buffer, 0, len);
+		}
+		stream.close();
 	}
 }
