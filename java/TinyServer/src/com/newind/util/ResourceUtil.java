@@ -4,15 +4,17 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.newind.ApplicationConfig;
 
 public class ResourceUtil {
+	private static boolean isJar = false;
+	static {
+		isJar = ResourceUtil.class.getResource("").getFile().startsWith("jar:");
+	}
 	public static InputStream getResource(String name) throws IOException{
-		ApplicationConfig config = ApplicationConfig.instance();
-		if (config.isDebug()) {
+		if (!isJar) {
 			return new FileInputStream("./res/" + name);
 		}else {
-			return config.getClass().getResourceAsStream("/res/" + name);
+			return ResourceUtil.class.getResourceAsStream("/res/" + name);
 		}
 	}
 }

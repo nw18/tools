@@ -166,8 +166,11 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	}
 	
 	File checkAndGet(String path) throws IOException{
-		String absPath;
 		path = URLDecoder.decode(path, config.getCodeType());
+		if (TextUtil.equal(path, "/")) {
+			return new File(config.getRoot());
+		}
+		String absPath;
 		if (path.startsWith("/") || path.startsWith("\\")) {
 			absPath = config.getRoot() + path;
 		}else{

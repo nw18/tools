@@ -26,7 +26,6 @@ public class ApplicationConfig {
 	private String codeType = "UTF-8";
 	private boolean ftpOn = true;
 	private boolean httpOn = true;
-	private boolean debug = false;
 	private Map<String, byte[]> resourceMap = new HashMap<>();
 	
 	public static ApplicationConfig instance() {
@@ -83,9 +82,6 @@ public class ApplicationConfig {
 				break;
 			case "http_on":
 				httpOn = Boolean.parseBoolean(value);
-				break;
-			case "debug":
-				debug = Boolean.parseBoolean(value);
 				break;
 			default:
 				break;
@@ -198,14 +194,6 @@ public class ApplicationConfig {
 	
 	public void setHttpOn(boolean httpOn) {
 		this.httpOn = httpOn;
-	}
-
-	public boolean isDebug() {
-		return debug;
-	}
-	
-	public void setDebug(boolean debug) {
-		this.debug = debug;
 	}
 	
 	public byte[] getResource(String name){
