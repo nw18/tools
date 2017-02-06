@@ -391,11 +391,20 @@ public class ApplicationUI extends JFrame{
 	
 	void setup(){
 		try {
+			LogCat logCat = new LogCat();
 			application = new Application();
 			setVisible(true);
 			while(isShowing()){
 				Thread.sleep(100);
 			}
+			if (!application.isRunning()) {
+				return;
+			}
+			logCat.setVisible(true);
+			while(logCat.isShowing()){
+				Thread.sleep(100);
+			}
+			application.closeServer();
 			application.waitServer();
 		} catch (Exception e) {
 			e.printStackTrace();

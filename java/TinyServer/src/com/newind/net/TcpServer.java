@@ -34,7 +34,9 @@ public abstract class TcpServer extends Thread{
 			logger.info("exception");
 		}finally{
 			try{
-			socket.close();
+				synchronized (this) {					
+					socket.close();
+				}
 			}catch(Exception e){
 				
 			}
@@ -42,7 +44,10 @@ public abstract class TcpServer extends Thread{
 		}
 	}
 	
-	public void close() {
+	public synchronized void close() {
+		if (socket.isClosed()) {
+			return;
+		}
 		running = false;
 		Socket client = new Socket();
 		try {

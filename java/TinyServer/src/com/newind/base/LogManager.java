@@ -6,14 +6,16 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.newind.util.TextUtil;
+
 public class LogManager {
-	public static String LOG_FILE_PATH = "application.log";
+	private static String LOG_FILE_PATH = "application.log";
 	/**
 	 * 初始化logger
 	 */
 	static{
 		FileHandler fileHandler = null;
-		if(!LOG_FILE_PATH.equals("")){
+		if(TextUtil.isEmpty(LOG_FILE_PATH)){
 			try {
 				fileHandler = new FileHandler(LOG_FILE_PATH);
 				fileHandler.setLevel(Level.ALL);
@@ -26,11 +28,6 @@ public class LogManager {
 				e.printStackTrace();
 			}
 		}
-		if (null == fileHandler){
-			ConsoleHandler consoleHandler = new ConsoleHandler();
-			consoleHandler.setLevel(Level.INFO);
-			getLogger().addHandler(consoleHandler);
-		}
 	}
 	/**
 	 * 返回默认logger
@@ -38,5 +35,9 @@ public class LogManager {
 	 */
 	public static Logger getLogger() {
 		return Logger.getLogger("default");
+	}
+	
+	public static void disableLogFile(){
+		LOG_FILE_PATH = "";
 	}
 }
