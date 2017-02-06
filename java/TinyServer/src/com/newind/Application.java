@@ -36,7 +36,6 @@ public class Application {
 			ftpServer.join();
 			ftpServer = null;
 		}
-		System.out.println("bye.");
 	}
 
 	public void closeServer(){
@@ -74,9 +73,10 @@ public class Application {
 				}
 			});
 			application.waitServer();
+			logger.info("bye.");
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.info("bye on exception.");
+			logger.info("bye with exception.");
 		}
 	}
 }

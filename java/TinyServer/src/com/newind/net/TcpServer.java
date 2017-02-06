@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.util.logging.Logger;
 
 import com.newind.base.LogManager;
@@ -20,7 +19,7 @@ public abstract class TcpServer extends Thread{
 	
 	public void run() {
 		try {
-			logger.info("setup");
+			logger.info("server setup");
 			while(running){
 				if(running){
 					handSocket(socket.accept());
@@ -28,10 +27,10 @@ public abstract class TcpServer extends Thread{
 					break;
 				}
 			}
-			logger.info("quiting");
+			logger.info("server quiting");
 		} catch (IOException e) {
 			e.printStackTrace();
-			logger.info("exception");
+			logger.info("server exception");
 		}finally{
 			try{
 				synchronized (this) {					
@@ -51,19 +50,17 @@ public abstract class TcpServer extends Thread{
 		running = false;
 		Socket client = new Socket();
 		try {
-			SocketAddress address = new InetSocketAddress("127.0.0.1", socket.getLocalPort());
-			logger.info("connecting " + address);
+			logger.info("closing");
 			client.connect(socket.getLocalSocketAddress(), 200);
-			logger.info("connected");
-		} catch (IOException e) {
-			e.printStackTrace();
+			logger.info("closed");
+		} catch (Exception e) {
+			logger.info("close exception");
 		}finally{
 			try {
 				client.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			logger.info("close finish.");
 		}
 	}
 	

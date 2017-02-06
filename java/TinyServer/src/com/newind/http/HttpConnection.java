@@ -29,7 +29,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	@Override
 	public void handle(Socket param) {
 		SocketAddress address = param.getRemoteSocketAddress();
-		logger.info(TAG + " from:" + address.toString());
+		logger.info("handle connection from:" + address.toString());
 		try{
 			attachTo(param);
 			long last_recv_time = System.currentTimeMillis();
@@ -37,12 +37,12 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				try{
 					int reqLen = inputStream.read(buffer);
 					if (reqLen <= 0) {
-						logger.info(TAG + " socket closed.");
+						logger.info("socket closed.");
 						param.close();
 						break;
 					}
 					if (reqLen >= buffer.length) {
-						logger.info(TAG + " too long reuqest.");
+						logger.info("receive too long reuqest.");
 						sendResponse(HttpResponse.BadRequest());
 						inputStream.close();
 						outputStream.close();
@@ -51,22 +51,20 @@ public class HttpConnection implements PoolingWorker<Socket>{
 					}
 					last_recv_time = System.currentTimeMillis();
 					String reqString = new String(buffer, 0, reqLen);
-					//logger.info(TAG + " receive:\n" + reqString);
 					handleRequest(reqString);
 				}catch(SocketTimeoutException e){
 					if (config.isShuttingDown()) {
 						break;
 					}
 					if(System.currentTimeMillis() - last_recv_time > config.getConnectionTimeout()){
-						logger.info(TAG + " " + param.getRemoteSocketAddress() + " connect timeout.");
+						logger.info(param.getRemoteSocketAddress() + " connect timeout.");
 						break;
 					}
 				}
 			}
 		}catch(SocketException e){
 			logger.info("SocketException " + e.getMessage());
-		}
-		catch (Exception e) {
+		}catch (Exception e) {
 			e.printStackTrace();
 		}finally{
 			outputStream = null;
@@ -86,7 +84,6 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	}
 	
 	private void sendResponse(String str) throws Exception{
-		logger.info(str);
 		outputStream.write(str.getBytes(config.getCodeType()));
 		outputStream.flush();
 	}
@@ -97,7 +94,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			sendResponse(HttpResponse.BadRequest());
 			throw new RuntimeException("bad http request");
 		}
-		logger.info(fields[0]);
+		logger.info("receive request:" + fields[0]);
 		String method[] = fields[0].split(" ");
 		if (method.length != 3) {
 			sendResponse(HttpResponse.BadRequest());
@@ -140,7 +137,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			if (!fileObject.exists() 
 					|| filePath.startsWith(".")
 					|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
-				logger.info(config.getRoot() + "\n" + fileObject.getAbsolutePath());
+				logger.warning("not found:\"" + fileObject.getAbsolutePath() + "\" in \"" + config.getRoot() + "\"");
 				sendResponse(HttpResponse.FileNotFound());
 				return;
 			}
@@ -157,7 +154,6 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				data = listString.getBytes(config.getCodeType());
 				sendResponse(HttpResponse.OkayHtml(data.length));
 			}
-			//logger.info("sending dir:" + fileObject.getAbsolutePath() + "\n" + listString);
 			outputStream.write(data);
 		}else {
 			String extString = fileObject.getName();
@@ -171,6 +167,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			FileInputStream fileStream = new FileInputStream(fileObject);
 			sendResponse(fileStream);
 		}
+		logger.info("transfer complete:" + fileObject.getAbsolutePath());
 	}
 	
 	private void sendResponse(InputStream stream) throws IOException {

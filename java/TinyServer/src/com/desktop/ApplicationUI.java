@@ -31,6 +31,7 @@ public class ApplicationUI extends JFrame{
 		"ftp_port","2121",
 		"http_on","true",
 		"ftp_on","false",
+		"writable","false",
 		"root","D:\\",
 		"json_mode","true",
 		"user_name","admin",
@@ -39,7 +40,7 @@ public class ApplicationUI extends JFrame{
 	};
 	
 	JTextField ipAddress,httpPort,ftpPort,root,userName,passWord,threadCount;
-	JCheckBox httpOn, ftpOn,jsonMode;
+	JCheckBox httpOn, ftpOn,writable,jsonMode;
 	
 	void initFrame() {
 		ipAddress = new JTextField(getValue("ip"));
@@ -51,6 +52,7 @@ public class ApplicationUI extends JFrame{
 		threadCount = new JTextField(getValue("thread_count"));
 		httpOn = new JCheckBox("http on", Boolean.parseBoolean(getValue("http_on")));
 		ftpOn = new JCheckBox("ftp on", Boolean.parseBoolean(getValue("ftp_on")));
+		writable = new JCheckBox("ftp writable",Boolean.parseBoolean(getValue("writable")));
 		jsonMode = new JCheckBox("http output in json format", Boolean.parseBoolean(getValue("json_mode")));
 	}
 	
@@ -227,6 +229,8 @@ public class ApplicationUI extends JFrame{
 		add(httpOn);
 		moveShort(ftpOn, pLast.right() + PADDING, pLast.y);
 		add(ftpOn);
+		moveShort(writable, pLast.right() + PADDING, pLast.y);
+		add(writable);
 		//the 4 line
 		moveNextLine();
 		moveLong(jsonMode, pLast.right() + PADDING, pLast.y);
@@ -337,6 +341,7 @@ public class ApplicationUI extends JFrame{
 		updateValue("pass_word", pass_word);
 		updateValue("http_on",String.valueOf(httpOn.isSelected()));
 		updateValue("ftp_on",String.valueOf(ftpOn.isSelected()));
+		updateValue("writable", String.valueOf(writable.isSelected()));
 		updateValue("json_mode", String.valueOf(jsonMode.isSelected()));
 	}
 	
