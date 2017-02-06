@@ -1,36 +1,35 @@
 package com.newind.base;
 
-import java.io.IOException;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public class LogManager {
-	public static String LOG_FILE_PATH = "application.log";
 	/**
 	 * 初始化logger
 	 */
+	private static class MemoryHandler extends Handler {
+		
+		@Override
+		public void publish(LogRecord arg0) {
+			// TODO Auto-generated method stub
+		}
+		
+		@Override
+		public void flush() {
+			// TODO Auto-generated method stub
+		}
+		
+		@Override
+		public void close() throws SecurityException {
+			// TODO Auto-generated method stub
+		}
+	};
+	
+	private static MemoryHandler memoryHandler = new MemoryHandler();
+	
 	static{
-		FileHandler fileHandler = null;
-		if(!LOG_FILE_PATH.equals("")){
-			try {
-				fileHandler = new FileHandler(LOG_FILE_PATH);
-				fileHandler.setLevel(Level.ALL);
-				getLogger().addHandler(fileHandler);
-			} catch (SecurityException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}catch (Exception e){
-				e.printStackTrace();
-			}
-		}
-		if (null == fileHandler){
-			ConsoleHandler consoleHandler = new ConsoleHandler();
-			consoleHandler.setLevel(Level.INFO);
-			getLogger().addHandler(consoleHandler);
-		}
+		getLogger().addHandler(memoryHandler);
 	}
 	/**
 	 * 返回默认logger

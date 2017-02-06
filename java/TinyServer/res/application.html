@@ -25,6 +25,9 @@ th {
     font-size: 100%;
     font-weight: bold;
 }
+div{
+	width: 1024px;
+}
 </style>
 <script type="text/javascript" src="/?jquery-3.1.1.min.js"></script>
 <script type="text/javascript">
@@ -50,6 +53,21 @@ function GoTo(url,isFile){
             }
             $("#content").append("<tr><td>" + line.join("</td><td>") + "</td></tr>");
         }
+        //make the path links
+        $("#path").empty();
+        var pathAry = parent.split("/");
+        $("#path").append("<a href=\"javascript:GoTo('/',false)\">根目录</a>");
+        var path = "";
+        for(var i = 0; i < pathAry.length; i++){
+        	var dir = pathAry[i];
+        	if(dir == ""){
+        		continue;
+        	}
+        	$("#path").append("/");
+        	path += "/" + dir;
+        	$("#path").append("<a href=\"javascript:GoTo('" + path + "',false)\">" + dir + "</a>");
+        }
+        window.scrollTo(0, 0);
     });
 }
 $(document).ready(function(){
@@ -57,6 +75,8 @@ $(document).ready(function(){
 });
 </script>
 </head><body>
+<div id="path">
+</div>
 <table id="content">
 <tr>
     <th><a id="parent" href="">上级</a></th>

@@ -81,18 +81,17 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 				try {
 					int len = inputStream.read(buffer, 0, buffer.length);
 					if (len <= 0) {
-						logger.info(TAG + " socket closed.");
+						logger.info("connection closed.");
 						param.close();
 						break;
 					}
 					if(len >= buffer.length){
-						logger.info("too long command!!!");
+						logger.info("receive too long command!!!");
 						break;
 					}
 					String cmdString = new String(buffer,0,len);
 					FtpCommand ftpCmd = new FtpCommand();
-					//TODO debug info
-					System.out.println("recv:\n" + cmdString);
+					logger.info(cmdString);
 					ftpCmd.parse(cmdString);
 					if (ftpCmd.getResult() != 0) {
 						sendResponse(ftpCmd.getResponse());
@@ -108,15 +107,14 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 					}
 					if (System.currentTimeMillis() - last_recv_time > config
 							.getConnectionTimeout()) {
-						logger.info(TAG + " " + param.getRemoteSocketAddress()
-								+ " connect timeout.");
+						logger.info("connection " + param.getRemoteSocketAddress() + " timeout.");
 						break;
 					}
 				} catch (CloseConnection e) {
-					logger.info("CloseConnection");
+					logger.info("closing ftp connection.");
 					break;
 				} catch (Throwable e){
-					e.printStackTrace(); //unhandle exception
+					e.printStackTrace(); //Unhandily exception
 					break;
 				}
 			}
@@ -144,8 +142,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	}
 	
 	void sendResponse(String responseString) throws IOException {
-		//TODO debug info
-		System.out.println("sendResponse:\n" + responseString);
+		logger.info(responseString);
 		outputStream.write(responseString.getBytes(config.getCodeType()));
 		outputStream.flush();
 	}
@@ -214,7 +211,6 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	
 	void onUser(FtpCommand cmd) throws IOException {
 		this.userName = cmd.getParam(0);
-		System.out.println("onUser " + userName);
 		if (TextUtil.equal(userName,config.getUserName())) {
 			if (TextUtil.isEmpty(config.getPassWord())){
 				sendResponse(FtpResponse.OK_USER_LOGON);
@@ -233,7 +229,6 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			return;
 		}
 		String passWord = cmd.getParam(0);
-		System.out.println("onPass " + passWord);
 		if (TextUtil.equal(passWord,config.getPassWord())) {
 			workStatus = WorkStatus.LogOn;
 			sendResponse(FtpResponse.OK_USER_LOGON);
@@ -296,7 +291,6 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			sendResponse(FtpResponse.ERR_NOT_TAKEN_ACTION);
 			return;
 		}
-		System.out.println("CDUP:" + currentDirectory.getAbsolutePath());
 		sendResponse(FtpResponse.OK_COMMAND);
 	}
 	
@@ -369,7 +363,6 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		ip += "." + cmd.getParam(2);
 		ip += "." + cmd.getParam(3);
 		int port = (Integer.parseInt(cmd.getParam(4)) << 8) + Integer.parseInt(cmd.getParam(5));
-		System.out.println("porting to :" + ip + ":" + port);
 		ftpTrasportation = new FtpTrasportation.PORT(ip, port);
 		ftpTrasportation.start(this);
 		sendResponse(FtpResponse.OK_COMMAND);
