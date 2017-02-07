@@ -1,5 +1,6 @@
 package com.desktop;
 
+import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -180,10 +181,12 @@ public class ApplicationUI extends JFrame{
 	Rect pLast = new Rect(PADDING, PADDING, 0, 0);
 	
 	ApplicationUI() {
+		setUndecorated(true);
+		getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
 		setTitle("TinyServer");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setSize(800, 600);
 		JLabel label = null;
+		setContentPane(new Panel());
 		setLayout(null);
 		loadLast();
 		initFrame();
@@ -264,7 +267,7 @@ public class ApplicationUI extends JFrame{
 		JButton buttonStart = new JButton("start server");
 		moveShort(buttonStart, pLast.right() + PADDING, pLast.y);
 		add(buttonStart);
-		setSize(Rect.MAX_RIGHT + PADDING * 2 + 20, Rect.MAX_BOTTOM + PADDING * 2 + 60);
+		setSize(Rect.MAX_RIGHT + PADDING * 2 + 20, Rect.MAX_BOTTOM + PADDING * 2 + 50);
 		buttonStart.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -405,6 +408,7 @@ public class ApplicationUI extends JFrame{
 			if (!application.isRunning()) {
 				return;
 			}
+			setVisible(false);
 			logCat.setVisible(true);
 			while(logCat.isShowing()){
 				Thread.sleep(100);
