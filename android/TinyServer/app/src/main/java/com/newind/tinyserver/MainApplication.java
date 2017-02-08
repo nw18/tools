@@ -16,8 +16,7 @@ public class MainApplication extends Application {
     private static com.newind.Application server;
     @Override
     public void onCreate() {
-        server = new com.newind.Application();
-        LogManager.LOG_FILE_PATH  = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + LogManager.LOG_FILE_PATH;
+        LogManager.disableLogFile();
         server = new com.newind.Application();
         try {
             server.startServer(new String[]{
