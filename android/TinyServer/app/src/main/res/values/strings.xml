@@ -18,4 +18,6 @@
     <string name="tv_ftp_user_name">FTP用户:</string>
     <string name="tv_thread_count">线程数:</string>
     <string name="bt_start">启动</string>
+    <string name="title_main">启动配置</string>
+    <string name="title_log_cat">日志</string>
 </resources>
