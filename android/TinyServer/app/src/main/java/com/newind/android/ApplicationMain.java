@@ -1,18 +1,15 @@
-package com.newind.tinyserver;
+package com.newind.android;
 
 import android.app.Application;
 import android.os.Environment;
 
-import com.newind.ApplicationConfig;
 import com.newind.base.LogManager;
-
-import java.io.File;
 
 /**
  * Created by Administrator on 2017/1/30.
  */
 
-public class MainApplication extends Application {
+public class ApplicationMain extends Application {
     private static com.newind.Application server;
     @Override
     public void onCreate() {

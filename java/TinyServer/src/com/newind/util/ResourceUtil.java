@@ -3,13 +3,14 @@ package com.newind.util;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 
 public class ResourceUtil {
 	private static boolean isJar;
 	static {
-		isJar = ResourceUtil.class.getResource(ResourceUtil.class.getSimpleName() + ".class").toString().startsWith("jar:");
-		System.out.println(ResourceUtil.class.getResource(ResourceUtil.class.getSimpleName() + ".class"));
+		URL url = ResourceUtil.class.getResource("/res/logo.png");
+		isJar = url != null && url.toString().startsWith("jar:");
 	}
 
 	public static InputStream getResource(String name) throws IOException{
