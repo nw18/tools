@@ -127,7 +127,6 @@ class LogCat extends JFrame{
 				}
 			}
 		});
-		refreshTimer.start();
 		addWindowListener(new WindowListener() {
 			
 			@Override
@@ -159,6 +158,16 @@ class LogCat extends JFrame{
 			public void windowActivated(WindowEvent arg0) {
 			}
 		});
+	}
+	
+	@Override
+	public void setVisible(boolean arg0) {
+		if (arg0) {
+			refreshTimer.start();
+		}else {
+			refreshTimer.stop();
+		}
+		super.setVisible(arg0);
 	}
 	
 	boolean syncData(){

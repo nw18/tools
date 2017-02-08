@@ -9,17 +9,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.swing.*;
 import com.newind.Application;
+import com.newind.util.InputUtil;
+import com.newind.util.InputUtil.ParameterException;
 import com.newind.util.TextUtil;
 
 public class ApplicationUI extends JFrame{
@@ -141,14 +135,6 @@ public class ApplicationUI extends JFrame{
 		}
 	}
 	
-	static class ParameterException extends RuntimeException{
-		private static final long serialVersionUID = 1L;
-
-		ParameterException(String message) {
-			super(message);
-		}
-	}
-	
 	JLabel makeLabel(String text,int x,int y){
 		JLabel label = new JLabel(text);
 		label.setVerticalAlignment(JLabel.CENTER);
@@ -203,7 +189,7 @@ public class ApplicationUI extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JPopupMenu menu = new JPopupMenu();
-				List<String> ipList = getAllIP();
+				List<String> ipList = InputUtil.getAllIP();
 				for(final String ip : ipList){
 					menu.add(ip).addActionListener(new ActionListener() {
 						String ipStr = ip;
@@ -301,19 +287,19 @@ public class ApplicationUI extends JFrame{
 	
 	void saveConfig() throws ParameterException{
 		String ip = ipAddress.getText();
-		if (!isIp(ip)) {
+		if (!InputUtil.isIp(ip)) {
 			ipAddress.selectAll();
 			throw new ParameterException("bad ipv4 address.");
 		}
 		updateValue("ip", ip);
 		String http_port = httpPort.getText();
-		if (!isPort(http_port)) {
+		if (!InputUtil.isPort(http_port)) {
 			httpPort.selectAll();
 			throw new ParameterException("bad http port.");
 		}
 		updateValue("http_port", http_port);
 		String ftp_port = ftpPort.getText();
-		if (!isPort(ftp_port)) {
+		if (!InputUtil.isPort(ftp_port)) {
 			ftpPort.selectAll();
 			throw new ParameterException("bad ftp port.");
 		}
@@ -325,18 +311,18 @@ public class ApplicationUI extends JFrame{
 		}
 		updateValue("root", rootFile.getAbsolutePath());
 		String user_name = userName.getText();
-		if (!isUserName(user_name)) {
+		if (!InputUtil.isUserName(user_name)) {
 			userName.selectAll();
 			throw new ParameterException("bad user name.");
 		}
 		updateValue("user_name", user_name);
 		String pass_word = passWord.getText();
-		if (!isUserName(pass_word)) {
+		if (!InputUtil.isUserName(pass_word)) {
 			passWord.selectAll();
 			throw new ParameterException("bad pass word.");
 		}
 		String thread_count = threadCount.getText();
-		if (!isPort(thread_count) || Integer.parseInt(thread_count) < 4 || Integer.parseInt(thread_count) > 4096) {
+		if (!InputUtil.isPort(thread_count) || Integer.parseInt(thread_count) < 4 || Integer.parseInt(thread_count) > 4096) {
 			threadCount.selectAll();
 			throw new ParameterException("thead count [4~4096]");
 		}
@@ -346,35 +332,6 @@ public class ApplicationUI extends JFrame{
 		updateValue("ftp_on",String.valueOf(ftpOn.isSelected()));
 		updateValue("writable", String.valueOf(writable.isSelected()));
 		updateValue("json_mode", String.valueOf(jsonMode.isSelected()));
-	}
-	
-	boolean isIp(String ipAddress) {
-		String ip = "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}";
-		Pattern pattern = Pattern.compile(ip);
-		Matcher matcher = pattern.matcher(ipAddress);
-		if(!matcher.matches()){
-			return false;
-		}
-		for(String string : ipAddress.split(".")){
-			if (Integer.parseInt(string) > 255) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	boolean isPort(String port){
-		String portReg = "\\d+";
-		Pattern pattern = Pattern.compile(portReg);
-		Matcher matcher = pattern.matcher(port);
-		return matcher.matches() && Integer.parseInt(port) < 65536;
-	}
-	
-	boolean isUserName(String name){
-		String unReg = "\\w+";
-		Pattern pattern = Pattern.compile(unReg);
-		Matcher matcher = pattern.matcher(name);
-		return matcher.matches();
 	}
 	
 	void updateValue(String key,String value) throws ParameterException{
@@ -418,29 +375,6 @@ public class ApplicationUI extends JFrame{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	List<String> getAllIP(){
-		List<String> ipList = new ArrayList<>();
-		try {
-			Enumeration<NetworkInterface> interfaces=null;
-			interfaces = NetworkInterface.getNetworkInterfaces();
-			while (interfaces.hasMoreElements()) {  
-				NetworkInterface ni = interfaces.nextElement(); 
-				Enumeration<InetAddress> addresss = ni.getInetAddresses();
-				while(addresss.hasMoreElements())
-				{
-					InetAddress nextElement = addresss.nextElement();
-					if (Inet4Address.class.isInstance(nextElement)) {
-						String hostAddress = nextElement.getHostAddress();
-						ipList.add(hostAddress);
-					}
-				}
-			} 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return ipList; 
 	}
 	
 	public static void main(String[] args) {

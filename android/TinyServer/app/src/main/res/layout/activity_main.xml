@@ -4,9 +4,8 @@
     android:layout_height="match_parent"
     android:scrollbars="vertical">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/activity_main"
+    <LinearLayout
+        android:id="@+id/ll_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -29,7 +28,8 @@
                 android:background="@color/colorEditText"
                 android:hint="@string/et_ip_hint"
                 android:inputType="number|text"
-                android:padding="5dp" />
+                android:padding="5dp"
+                android:tag="ip"/>
 
             <Button
                 android:id="@+id/bt_browse_ip"
@@ -59,7 +59,8 @@
                 android:layout_weight="1"
                 android:background="@color/colorEditText"
                 android:inputType="number"
-                android:padding="5dp" />
+                android:padding="5dp"
+                android:tag="http_port"/>
         </LinearLayout>
 
         <LinearLayout
@@ -82,7 +83,8 @@
                 android:layout_weight="1"
                 android:background="@color/colorEditText"
                 android:inputType="number"
-                android:padding="5dp" />
+                android:padding="5dp"
+                android:tag="ftp_port"/>
         </LinearLayout>
 
         <com.newind.android.SwitchEx
@@ -94,7 +96,8 @@
             android:showText="false"
             android:textColor="@color/colorTextBlack"
             android:textOff="@string/sw_http_off"
-            android:textOn="@string/sw_http_on" />
+            android:textOn="@string/sw_http_on"
+            android:tag="http_on"/>
 
         <com.newind.android.SwitchEx
             android:id="@+id/sw_json_mode"
@@ -105,7 +108,8 @@
             android:showText="false"
             android:textColor="@color/colorTextBlack"
             android:textOff="@string/sw_json_mode_off"
-            android:textOn="@string/sw_json_mode_on" />
+            android:textOn="@string/sw_json_mode_on"
+            android:tag="json_mode"/>
 
         <com.newind.android.SwitchEx
             android:id="@+id/sw_ftp_on"
@@ -116,7 +120,8 @@
             android:showText="false"
             android:textColor="@color/colorTextBlack"
             android:textOff="@string/sw_ftp_off"
-            android:textOn="@string/sw_ftp_on" />
+            android:textOn="@string/sw_ftp_on"
+            android:tag="ftp_on"/>
 
         <com.newind.android.SwitchEx
             android:id="@+id/sw_ftp_writable"
@@ -126,7 +131,8 @@
             android:checked="false"
             android:textColor="@color/colorTextBlack"
             android:textOff="@string/sw_ftp_writable_off"
-            android:textOn="@string/sw_ftp_writable_on" />
+            android:textOn="@string/sw_ftp_writable_on"
+            android:tag="writable"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -143,7 +149,8 @@
                 android:background="@color/colorEditText"
                 android:hint="@string/et_path_hint"
                 android:inputType="text"
-                android:padding="5dp" />
+                android:padding="5dp"
+                android:tag="root"/>
 
             <Button
                 android:id="@+id/bt_browse_path"
@@ -173,7 +180,8 @@
                 android:layout_weight="2"
                 android:background="@color/colorEditText"
                 android:inputType="text"
-                android:padding="5dp" />
+                android:padding="5dp"
+                android:tag="user_name"/>
         </LinearLayout>
 
         <LinearLayout
@@ -196,7 +204,8 @@
                 android:layout_weight="2"
                 android:background="@color/colorEditText"
                 android:inputType="text"
-                android:padding="5dp" />
+                android:padding="5dp"
+                android:tag="pass_word"/>
         </LinearLayout>
 
         <LinearLayout
@@ -219,7 +228,8 @@
                 android:layout_weight="2"
                 android:background="@color/colorEditText"
                 android:inputType="text"
-                android:padding="5dp" />
+                android:padding="5dp"
+                android:tag="thread_count"/>
         </LinearLayout>
 
         <Button
