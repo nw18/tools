@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 import com.newind.base.LogManager;
 import com.newind.ftp.FtpServer;
 import com.newind.http.HttpServer;
+import com.newind.util.TextUtil;
 
 public class Application {
 	private static Logger logger = LogManager.getLogger();
@@ -52,6 +53,20 @@ public class Application {
 		ApplicationPooling.instance().release();
 		System.out.println("rlease workers end.");
 		System.out.println("close server end.");
+	}
+	
+	public String getServerAddresses(){
+		String addr = "";
+		if (null != httpServer) {
+			addr = "http://" + httpServer.getAddress();
+		}
+		if (null != ftpServer) {
+			if (!TextUtil.isEmpty(addr)) {
+				addr += "\n";
+			}
+			addr += "ftp://" + httpServer.getAddress();
+		}
+		return addr;
 	}
 
 	public boolean isRunning(){

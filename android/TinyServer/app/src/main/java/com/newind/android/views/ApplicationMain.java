@@ -1,7 +1,8 @@
-package com.newind.android;
+package com.newind.android.views;
 
 import android.app.Application;
 
+import com.newind.android.activities.ActivityLogCat;
 import com.newind.base.LogManager;
 
 /**

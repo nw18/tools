@@ -1,6 +1,9 @@
-package com.newind.android;
+package com.newind.android.activities;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.os.AsyncTask;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -12,7 +15,11 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.newind.android.views.ApplicationMain;
+import com.newind.android.views.DialogProcessing;
+import com.newind.android.R;
 import com.newind.base.LogManager;
 
 import java.text.SimpleDateFormat;
@@ -63,6 +70,10 @@ public class ActivityLogCat extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_cat);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
         lv_log_cat = ((ListView) findViewById(R.id.lv_log_cat));
         logAdapter = new LogAdapter();
         lv_log_cat.setAdapter(logAdapter);
@@ -108,8 +119,18 @@ public class ActivityLogCat extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_id_stop){
-            new StopTask().execute();
+        switch (item.getItemId()){
+            case R.id.menu_id_copy:
+                ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                cm.setPrimaryClip(ClipData.newPlainText("server addresses:",ApplicationMain.getServer().getServerAddresses().replace("///","//")));
+                Toast.makeText(this,"已复制",Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.menu_id_stop:
+                new StopTask().execute();
+                break;
+            case android.R.id.home:
+                onBackPressed();
+                break;
         }
         return true;
     }

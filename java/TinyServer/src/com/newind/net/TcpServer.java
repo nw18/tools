@@ -64,5 +64,9 @@ public abstract class TcpServer extends Thread{
 		}
 	}
 	
+	public String getAddress(){
+		return socket.getLocalSocketAddress().toString();
+	}
+	
 	protected abstract void handSocket(Socket peer);
 }

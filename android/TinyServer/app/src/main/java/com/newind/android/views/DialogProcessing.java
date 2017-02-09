@@ -1,10 +1,12 @@
-package com.newind.android;
+package com.newind.android.views;
 
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.widget.TextView;
+
+import com.newind.android.R;
 
 /**
  * Created by newind on 17-2-9.

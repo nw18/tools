@@ -2,6 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/menu_id_stop"
-        android:showAsAction="ifRoom"
-        android:title="停止" />
+        android:showAsAction="never"
+        android:title="停止服务" />
+    <item
+        android:id="@+id/menu_id_copy"
+        android:showAsAction="never"
+        android:title="复制地址" />
 </menu>

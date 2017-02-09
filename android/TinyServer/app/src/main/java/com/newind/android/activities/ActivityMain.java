@@ -1,4 +1,4 @@
-package com.newind.android;
+package com.newind.android.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,6 +16,9 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.newind.android.views.ApplicationMain;
+import com.newind.android.R;
+import com.newind.android.SwitchEx;
 import com.newind.util.InputUtil;
 import com.newind.util.TextUtil;
 import com.newind.util.InputUtil.ParameterException;
@@ -68,12 +71,15 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
         String configString = sp.getString(CONFIG, null);
         if (!TextUtils.isEmpty(configString)) {
             String[] lastConfig = configString.split("\n");
-            for (int i = 0; i < config.length; i += 2) {
+            if (lastConfig == null){
+                return;
+            }
+            for (int i = 0; i < config.length - 1 && i < lastConfig.length - 1; i += 2) {
                 if (!TextUtils.equals(config[i], lastConfig[i])) {
                     return;
                 }
             }
-            for (int i = 0; i < config.length - 1; i += 2) {
+            for (int i = 0; i < config.length - 1 && i < lastConfig.length - 1; i += 2) {
                 config[i + 1] = lastConfig[i + 1];
             }
         }
@@ -97,6 +103,7 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < config.length; i++) {
             sb.append(config[i]);
+            sb.append("\n");
         }
         SharedPreferences sp = getSharedPreferences(getClass().getName(), MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
@@ -189,7 +196,8 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_id_about) {
-            // TODO: 17-2-8 show about.
+            Intent it = new Intent(this,ActivityAbout.class);
+            startActivity(it);
         }else if (item.getItemId() == R.id.menu_id_reset){
             loadConfig2Frame();
         }
@@ -200,6 +208,14 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == RESULT_OK){
+            ((EditText)findViewById(R.id.et_path)).setText(data.getStringExtra(ActivityBrowse.KEY_SELECT));
+        }
     }
 
     @Override
@@ -226,19 +242,24 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.bt_browse_path:
+                File file = Environment.getExternalStorageDirectory();
+                if (file == null || !file.exists()){
+                    Toast.makeText(this,"存储卡不可用",Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                ActivityBrowse.start(this,file.getAbsolutePath(),1);
                 break;
             case R.id.bt_start:
                 try{
                     checkConfigFrame();
                     saveFrame2Config();
                     ApplicationMain.getServer().startServer(config);
-                }catch (ParameterException e){
-                    Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
-                    break;
                 } catch (Exception e) {
+                    Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                     break;
                 }
+                saveLast();
                 Intent it = new Intent(this,ActivityLogCat.class);
                 startActivity(it);
                 break;
