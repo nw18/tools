@@ -1,11 +1,14 @@
 package com.newind.android.activities;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -17,7 +20,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.newind.android.views.ApplicationMain;
+import com.newind.android.ApplicationMain;
 import com.newind.android.views.DialogProcessing;
 import com.newind.android.R;
 import com.newind.base.LogManager;
@@ -103,10 +106,22 @@ public class ActivityLogCat extends AppCompatActivity {
                 }
             }
         },100,40);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        Notification notification = builder.setContentTitle(getResources().getString(R.string.app_name))
+                .setContentText(ApplicationMain.getServer().getServerAddresses().replace("///","//"))
+                .setSmallIcon(R.mipmap.logo)
+                .setWhen(System.currentTimeMillis())
+                .setPriority(Notification.PRIORITY_DEFAULT)
+                .setOngoing(true)
+                .setAutoCancel(false).build();
+        notificationManager.notify(R.id.activity_log_cat,notification);
     }
 
     @Override
     protected void onDestroy() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.cancel(R.id.activity_log_cat);
         refreshTimer.cancel();
         super.onDestroy();
     }
@@ -130,6 +145,12 @@ public class ActivityLogCat extends AppCompatActivity {
                 break;
             case android.R.id.home:
                 onBackPressed();
+                break;
+            case R.id.menu_id_clear:
+                synchronized (listCache){
+                    listCache.clear();
+                    hasNewData = true;
+                }
                 break;
         }
         return true;
