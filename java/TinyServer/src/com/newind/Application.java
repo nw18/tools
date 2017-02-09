@@ -14,8 +14,9 @@ public class Application {
 	public void startServer(String[] args) throws Exception{
 		System.out.println("hello");
 		ApplicationConfig config = ApplicationConfig.instance();
-		ApplicationPooling.setup(config.getThreadCount());
+		config.setShuttingDown(false);
 		config.load(args);
+		ApplicationPooling.setup(config.getThreadCount());
 		if (config.isHttpOn()) {			
 			httpServer = new HttpServer(config.getIp(), config.getHttpPort());
 			httpServer.start();

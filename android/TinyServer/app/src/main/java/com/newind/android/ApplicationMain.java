@@ -14,6 +14,7 @@ public class ApplicationMain extends Application {
     public void onCreate() {
         LogManager.disableLogFile();
         server = new com.newind.Application();
+        ActivityLogCat.init();
     }
 
     public static com.newind.Application getServer(){

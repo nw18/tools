@@ -2,6 +2,7 @@ package com.newind.android;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Environment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,7 +35,7 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
             "http_on", "true",
             "ftp_on", "false",
             "writable", "false",
-            "root", "D:\\",
+            "root", "/",
             "json_mode", "true",
             "user_name", "admin",
             "pass_word", "123456",
@@ -175,6 +176,10 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
         }
         for (int id : IDS){
             findViewById(id).setOnClickListener(this);
+        }
+        File dir = Environment.getExternalStorageDirectory();
+        if (dir != null && dir.exists()){
+            setValue("root",dir.getAbsolutePath());
         }
         findAll((ViewGroup)findViewById(R.id.ll_content));
         loadLast();

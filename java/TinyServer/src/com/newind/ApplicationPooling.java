@@ -57,4 +57,10 @@ public class ApplicationPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 		_instacne_ = new ApplicationPooling(threadCount);
 		_instacne_.setup();
 	}
+	
+	@Override
+	public void release() {
+		super.release();
+		_instacne_ = null;
+	}
 }
