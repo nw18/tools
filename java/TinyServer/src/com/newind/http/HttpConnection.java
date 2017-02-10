@@ -117,20 +117,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		}
 		File fileObject = null;
 		if (filePath.startsWith("?")) {
-			byte[] data = config.getResource(filePath.substring(1));
-			if (null == data) {
-				sendResponse(HttpResponse.FileNotFound());
-			}else {
-				String extString = filePath;
-				int pos = extString.lastIndexOf('.');
-				if (pos < 0) {
-					extString = Mime.toContentType("");
-				}else {				
-					extString = Mime.toContentType(extString.substring(pos + 1));
-				}
-				sendResponse(HttpResponse.OkayFile(data.length, extString));
-				outputStream.write(data);
-			}
+			sendInnerResource(filePath.substring(1));
 			return;
 		}else {
 			fileObject = TextUtil.isEmpty(filePath) ? rootFile : new File(rootFile,filePath);
@@ -146,9 +133,23 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			byte[] data;
 			String listString;
 			if (config.isJsonMode()) {
-				listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
-				data = listString.getBytes(config.getCodeType());
-				sendResponse(HttpResponse.OkayFile(data.length, "application/json"));
+				boolean isRootHtml = false;
+				if (fileObject == rootFile) {
+					for(int i = 0; i < fields.length; i++){
+						String field = fields[i].toLowerCase();
+						if (field.startsWith("accept:") && field.indexOf(Mime.toContentType("html")) > 0) {
+							isRootHtml = true;
+						}
+					}
+				}
+				if (isRootHtml) {
+					sendInnerResource("application.html");
+					return;
+				}else {
+					listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
+					data = listString.getBytes(config.getCodeType());
+					sendResponse(HttpResponse.OkayFile(data.length, "application/json"));
+				}
 			}else {
 				listString = HttpResponse.listDirectoryHTML(fileObject, rootFile);
 				data = listString.getBytes(config.getCodeType());
@@ -177,5 +178,22 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			outputStream.write(buffer, 0, len);
 		}
 		stream.close();
+	}
+	
+	private void sendInnerResource(String filePath) throws Exception{
+		byte[] data = config.getResource(filePath);
+		if (null == data) {
+			sendResponse(HttpResponse.FileNotFound());
+		}else {
+			String extString = filePath;
+			int pos = extString.lastIndexOf('.');
+			if (pos < 0) {
+				extString = Mime.toContentType("");
+			}else {				
+				extString = Mime.toContentType(extString.substring(pos + 1));
+			}
+			sendResponse(HttpResponse.OkayFile(data.length, extString));
+			outputStream.write(data);
+		}
 	}
 }
