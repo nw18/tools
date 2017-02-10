@@ -133,16 +133,18 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			byte[] data;
 			String listString;
 			if (config.isJsonMode()) {
-				boolean isRootHtml = false;
+				boolean isJsonRequest = true;
 				if (fileObject == rootFile) {
+					String json1 = "application/json", json2 = "text/javascript";
 					for(int i = 0; i < fields.length; i++){
 						String field = fields[i].toLowerCase();
-						if (field.startsWith("accept:") && field.indexOf(Mime.toContentType("html")) > 0) {
-							isRootHtml = true;
+						if (field.startsWith("accept:")) {
+							isJsonRequest = field.indexOf(json1) > 0 || field.indexOf(json2) > 0;
+							break;
 						}
 					}
 				}
-				if (isRootHtml) {
+				if (!isJsonRequest) {
 					sendInnerResource("application.html");
 					return;
 				}else {

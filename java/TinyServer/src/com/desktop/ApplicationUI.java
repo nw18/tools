@@ -167,8 +167,8 @@ public class ApplicationUI extends JFrame{
 	Rect pLast = new Rect(PADDING, PADDING, 0, 0);
 	
 	ApplicationUI() {
-		setUndecorated(true);
-		getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+		//setUndecorated(true);
+		//getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
 		setTitle("TinyServer");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JLabel label = null;
