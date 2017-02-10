@@ -16,9 +16,9 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.newind.android.views.ApplicationMain;
+import com.newind.android.ApplicationMain;
 import com.newind.android.R;
-import com.newind.android.SwitchEx;
+import com.newind.android.views.SwitchEx;
 import com.newind.util.InputUtil;
 import com.newind.util.TextUtil;
 import com.newind.util.InputUtil.ParameterException;

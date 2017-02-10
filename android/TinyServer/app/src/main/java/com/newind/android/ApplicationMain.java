@@ -1,4 +1,4 @@
-package com.newind.android.views;
+package com.newind.android;
 
 import android.app.Application;
 

@@ -1,4 +1,4 @@
-package com.newind.android;
+package com.newind.android.views;
 
 
 import android.content.Context;

@@ -8,4 +8,8 @@
         android:id="@+id/menu_id_copy"
         android:showAsAction="never"
         android:title="复制地址" />
+    <item
+        android:id="@+id/menu_id_clear"
+        android:showAsAction="never"
+        android:title="清空日志" />
 </menu>
