@@ -16,7 +16,6 @@ import java.util.logging.LogRecord;
 
 import javax.swing.JFrame;
 import javax.swing.JList;
-import javax.swing.JRootPane;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.ListModel;
@@ -99,8 +98,8 @@ class LogCat extends JFrame{
 	};
 	
 	LogCat() {
-		setUndecorated(true);
-		getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+		//setUndecorated(true);
+		//getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
 		setTitle("TinyServer logging");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(800, 600);
