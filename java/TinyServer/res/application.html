@@ -31,32 +31,29 @@ div{
 </style>
 <script type="text/javascript" src="/?jquery-3.1.1.min.js"></script>
 <script type="text/javascript">
-function GoTo(url,isFile){
-    if (isFile) {
-        window.open(url);
-        return;
-    }
+function GoTo(url){
     $.getJSON(url,function(result){
-        $("#parent").attr("href","javascript:GoTo('" + result.parent + "',false)");
+        $("#parent").attr("href","javascript:GoTo('" + result.parent + "')");
         $("#content tr:gt(0)").remove();
         var parent = result.parent.substring(0,result.parent.length-2);
         for(var i = 0; i < result.data.length; i++){
             var line = result.data[i];
-            line[1] = "<a href=\"javascript:GoTo('" + parent + line[1] + "'," + (line[0] != 1) + ")\">" + line[1] + "</a>"
             var date = new Date();
             date.setTime(line[3]);
             line[3] = date.toLocaleString();
             if (line[0] == 1) {
                 line[0] = "D";
+                line[1] = "<a href=\"javascript:GoTo('" + parent + line[1] + "')\">" + line[1] + "</a>";
             }else {
                 line[0] = "F";
+                line[1] = "<a href=\"" + parent + line[1] + "\" target=\"_blank\">" + line[1] + "</a>";
             }
             $("#content").append("<tr><td>" + line.join("</td><td>") + "</td></tr>");
         }
         //make the path links
         $("#path").empty();
         var pathAry = parent.split("/");
-        $("#path").append("<a href=\"javascript:GoTo('/',false)\">根目录</a>");
+        $("#path").append("<a href=\"javascript:GoTo('/')\">根目录</a>");
         var path = "";
         for(var i = 0; i < pathAry.length; i++){
         	var dir = pathAry[i];
@@ -65,13 +62,13 @@ function GoTo(url,isFile){
         	}
         	$("#path").append("/");
         	path += "/" + dir;
-        	$("#path").append("<a href=\"javascript:GoTo('" + path + "',false)\">" + dir + "</a>");
+        	$("#path").append("<a href=\"javascript:GoTo('" + path + "')\">" + dir + "</a>");
         }
         window.scrollTo(0, 0);
     });
 }
 $(document).ready(function(){
-    GoTo("/",false);
+    GoTo("/");
 });
 </script>
 </head><body>

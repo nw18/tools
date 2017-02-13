@@ -88,6 +88,24 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		outputStream.flush();
 	}
 	
+	private void sendResponse(byte[] data) throws Exception{
+		outputStream.write(data);
+		outputStream.flush();
+	}
+	
+	void sendTrunk(String response) throws IOException{
+		byte[] data = response.getBytes(config.getCodeType());
+		outputStream.write(String.format("%x\r\n", data.length).getBytes(config.getCodeType()));
+		outputStream.write(data);
+		outputStream.write(HttpResponse.CRLF);
+		outputStream.flush();
+	}
+	
+	void sendTrunkEnd() throws IOException{
+		outputStream.write("0\r\n\r\n".getBytes(config.getCodeType()));
+		outputStream.flush();
+	}
+	
 	private void handleRequest(String reqString) throws Exception{
 		String fields[] = reqString.split("\r\n");
 		if(fields.length < 1){
@@ -110,7 +128,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				sendResponse(HttpResponse.FileNotFound());
 			}else {
 				sendResponse(HttpResponse.OkayFile(data.length, Mime.toContentType("png")));
-				outputStream.write(data);
+				sendResponse(data);
 				System.out.println("aha tiny logo !!!");
 			}
 			return;
@@ -129,7 +147,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 					extString = Mime.toContentType(extString.substring(pos + 1));
 				}
 				sendResponse(HttpResponse.OkayFile(data.length, extString));
-				outputStream.write(data);
+				sendResponse(data);
 			}
 			return;
 		}else {
@@ -154,7 +172,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				data = listString.getBytes(config.getCodeType());
 				sendResponse(HttpResponse.OkayHtml(data.length));
 			}
-			outputStream.write(data);
+			sendResponse(data);
 		}else {
 			String extString = fileObject.getName();
 			int pos = extString.lastIndexOf('.');
