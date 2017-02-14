@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.os.AsyncTask;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -180,7 +181,7 @@ public class ActivityLogCat extends AppCompatActivity {
             TextView textView = (TextView) view;
             if (textView == null){
                 textView = new TextView(ActivityLogCat.this);
-                textView.setTextColor(getColor(R.color.colorTextBlack));
+                textView.setTextColor(ContextCompat.getColor(getBaseContext(),R.color.colorTextBlack));
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12);
                 textView.setEllipsize(TextUtils.TruncateAt.END);
                 textView.setPadding(5,3,5,3);

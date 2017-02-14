@@ -3,6 +3,7 @@ package com.newind.android.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -136,7 +137,7 @@ public class ActivityBrowse extends AppCompatActivity implements View.OnClickLis
             TextView textView = (TextView) view;
             if (textView == null){
                 textView = new TextView(ActivityBrowse.this);
-                textView.setTextColor(getColor(R.color.colorTextBlack));
+                textView.setTextColor(ContextCompat.getColor(getBaseContext(),R.color.colorTextBlack));
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP,15);
                 textView.setEllipsize(TextUtils.TruncateAt.END);
                 textView.setPadding(5,3,5,3);
