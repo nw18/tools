@@ -22,7 +22,9 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	public static final String TAG = HttpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
 	private ApplicationConfig config = ApplicationConfig.instance();
-	private byte[] buffer = new byte[config.getRecvBufferSize()]; 
+	private byte[] buffer = new byte[config.getRecvBufferSize()];
+	private int MAX_TRUNK_SIZE = Math.min(config.getRecvBufferSize() / 2,1440);
+	private int trunkOffset = 0;
 	private File rootFile = new File(config.getRoot());
 	private InputStream inputStream;
 	private OutputStream outputStream;
@@ -92,16 +94,42 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		outputStream.write(data);
 		outputStream.flush();
 	}
-	
-	void sendTrunk(String response) throws IOException{
-		byte[] data = response.getBytes(config.getCodeType());
-		outputStream.write(String.format("%x\r\n", data.length).getBytes(config.getCodeType()));
-		outputStream.write(data);
+
+	private void sendTrunk(byte[] data,int length) throws IOException{
+		outputStream.write(String.format("%x\r\n", length).getBytes(config.getCodeType()));
+		outputStream.write(data,0,length);
 		outputStream.write(HttpResponse.CRLF);
 		outputStream.flush();
 	}
+
+	void sendTrunkBegin(){
+		trunkOffset = 0;
+	}
+	
+	void sendTrunk(String response) throws IOException{
+		byte[] data = response.getBytes(config.getCodeType());
+		if (trunkOffset + data.length > MAX_TRUNK_SIZE ){
+			sendTrunk(buffer,trunkOffset);
+			trunkOffset = 0;
+		}
+		if(trunkOffset + data.length < MAX_TRUNK_SIZE)
+		{
+			System.arraycopy(data,0,buffer,trunkOffset,data.length);
+			trunkOffset += data.length;
+		}else {
+			if (trunkOffset > 0){
+				sendTrunk(buffer,trunkOffset);
+				trunkOffset = 0;
+			}
+			sendTrunk(data,data.length);
+		}
+	}
 	
 	void sendTrunkEnd() throws IOException{
+		if (trunkOffset > 0){
+			sendTrunk(buffer,trunkOffset);
+			trunkOffset = 0;
+		}
 		outputStream.write("0\r\n\r\n".getBytes(config.getCodeType()));
 		outputStream.flush();
 	}
@@ -171,9 +199,12 @@ public class HttpConnection implements PoolingWorker<Socket>{
 					sendInnerResource("application.html",isHead);
 					return;
 				}else {
-					listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
-					data = listString.getBytes(config.getCodeType());
-					sendResponse(HttpResponse.OkayFile(data.length, "application/json"));
+//					listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
+//					data = listString.getBytes(config.getCodeType());
+//					sendResponse(HttpResponse.OkayFile(data.length, "application/json"));
+					sendResponse(HttpResponse.OkayFileTrunked("application/json"));
+					HttpResponse.listDirectoryJSONByTrunk(fileObject,rootFile,this);
+					return;
 				}
 			}else {
 				listString = HttpResponse.listDirectoryHTML(fileObject, rootFile);
@@ -202,7 +233,6 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	
 	private void sendResponse(InputStream stream) throws IOException {
 		int len = 0;
-		//logger.info("sending file:" + fileObject.getAbsolutePath());
 		while((len = stream.read(buffer,0,buffer.length)) > 0){
 			outputStream.write(buffer, 0, len);
 		}

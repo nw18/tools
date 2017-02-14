@@ -21,22 +21,7 @@
     <string name="title_main">启动配置</string>
     <string name="title_log_cat">日志</string>
     <string name="please_wait">请稍等..</string>
-    <string name="tv_help_document" formatted="false">
-    温馨提示:这是一个传文件用的软件，用完及时关闭，不要用在重要的场合避免因软件存在的潜在缺陷导致数据损失。\n
-    欢迎反馈问题: nw18148@gmail.com\n
-    APP免责声明:\n
-        0、本声明拷贝自http://wenku.baidu.com\n
-        1、一切移动客户端用户在下载并浏览APP软件时均被视为已经仔细阅读本条款并完全同意。\n
-        2、APP手机APP转载的内容并不代表APP手机APP之意见及观点，也不意味着本网赞同其观点或证实其内容的真实性。\n
-        3、APP手机APP转载的文字、图片、音视频等资料均由本APP用户提供，其真实性、准确性和合法性由信息发布人负责。APP手机APP不提供任何保证，并不承担任何法律责任。\n
-        4、APP手机APP所转载的文字、图片、音视频等资料，如果侵犯了第三方的知识产权或其他权利，责任由资料作者或转载者本人承担，本APP对此不承担责任。\n
-        5、APP手机APP不保证为向用户提供便利而设置的外部链接的准确性和完整性，同时，对于该外部链接指向的不由APP手机APP实际控制的任何网页上的内容，APP手机APP不承担任何责任。\n
-        6、用户明确并同意其使用APP手机APP网络服务所存在的风险将完全由其本人承担；因其使用APP手机APP网络服务而产生的一切后果也由其本人承担，APP手机APP对此不承担任何责任。\n
-        7、除APP手机APP注明之服务条款外，其它因不当使用本APP而导致的任何意外、疏忽、合约毁坏、诽谤、版权或其他知识产权侵犯及其所造成的任何损失，APP手机APP概不负责，亦不承担任何法律责任。\n
-        8、对于因不可抗力或因黑客攻击、通讯线路中断等APP手机APP不能控制的原因造成的网络服务中断或其他缺陷，导致用户不能正常使用APP手机APP，APP手机APP不承担任何责任，但将尽力减少因此给用户造成的损失或影响。\n
-        9、本声明未涉及的问题请参见国家有关法律法规，当本声明与国家有关法律法规冲突时，以国家法律法规为准。\n
-        10、本网站相关声明版权及其修改权、更新权和最终解释权均属APP作者。
-    </string>
+    <string name="tv_help_document" formatted="false">用完及时关闭。</string>
     <string name="bt_dir_select">选定当前</string>
     <string name="title_about">关于</string>
     <string name="title_browse">选择目录</string>

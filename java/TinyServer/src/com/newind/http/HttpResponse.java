@@ -2,6 +2,7 @@ package com.newind.http;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 
@@ -117,5 +118,36 @@ public class HttpResponse {
 		}
 		stringBuilder.append("]}");
 		return stringBuilder.toString();
+	}
+
+	public static void listDirectoryJSONByTrunk(File dir,File root,HttpConnection connection) throws IOException{
+		connection.sendTrunkBegin();
+		File fileList[] = dir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File file, String name) {
+				return !name.startsWith(".");
+			}
+		});
+		String rootPath = root.getAbsolutePath();
+		String current = dir.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
+		String parent = current + "/..";
+		connection.sendTrunk(String.format("{\"parent\":\"%s\",\n",parent));
+		connection.sendTrunk("\"data\":[");
+		if(fileList != null && fileList.length != 0){
+			for(int i = 0; i < fileList.length; i++){
+				File file = fileList[i];
+				connection.sendTrunk(String.format("[%d,\"%s\",%d,%d]",
+						file.isDirectory() ? 1 : 0,
+						file.getName(),
+						file.length(),
+						file.lastModified()
+				));
+				if (i != fileList.length - 1) {
+					connection.sendTrunk(",\n");
+				}
+			}
+		}
+		connection.sendTrunk("]}");
+		connection.sendTrunkEnd();
 	}
 }

@@ -180,7 +180,7 @@ public class ActivityLogCat extends AppCompatActivity {
             TextView textView = (TextView) view;
             if (textView == null){
                 textView = new TextView(ActivityLogCat.this);
-                textView.setTextColor(getResources().getColor(R.color.colorTextBlack));
+                textView.setTextColor(getColor(R.color.colorTextBlack));
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12);
                 textView.setEllipsize(TextUtils.TruncateAt.END);
                 textView.setPadding(5,3,5,3);
