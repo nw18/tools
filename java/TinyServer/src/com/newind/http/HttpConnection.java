@@ -96,7 +96,9 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		}
 		logger.info("receive request:" + fields[0]);
 		String method[] = fields[0].split(" ");
-		if (method.length != 3) {
+		boolean isGet = TextUtil.equal(method[0].toUpperCase(),"GET");
+		boolean isHead = TextUtil.equal(method[0].toUpperCase(), "HEAD");
+		if (method.length != 3 || (!isGet && !isHead)) {
 			sendResponse(HttpResponse.BadRequest());
 			throw new RuntimeException("bad http request:" + fields[0]);
 		}
@@ -104,20 +106,24 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		if (filePath.startsWith("/")) {
 			filePath = filePath.substring(1);
 		}
+		//hard code for FAVICON
 		if (filePath.equals(HttpResponse.FAVICON)) {
 			byte[] data = config.getResource(HttpResponse.FAVICON);
-			if (data == null) { //TODO fix this code.
+			if (data == null) {
 				sendResponse(HttpResponse.FileNotFound());
 			}else {
 				sendResponse(HttpResponse.OkayFile(data.length, Mime.toContentType("png")));
-				outputStream.write(data);
+				if(!isHead){
+					outputStream.write(data);
+				}
 				System.out.println("aha tiny logo !!!");
 			}
 			return;
 		}
 		File fileObject = null;
+		//is is a inner resource,this use a query string.
 		if (filePath.startsWith("?")) {
-			sendInnerResource(filePath.substring(1));
+			sendInnerResource(filePath.substring(1),isHead);
 			return;
 		}else {
 			fileObject = TextUtil.isEmpty(filePath) ? rootFile : new File(rootFile,filePath);
@@ -145,7 +151,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 					}
 				}
 				if (!isJsonRequest) {
-					sendInnerResource("application.html");
+					sendInnerResource("application.html",isHead);
 					return;
 				}else {
 					listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
@@ -157,7 +163,9 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				data = listString.getBytes(config.getCodeType());
 				sendResponse(HttpResponse.OkayHtml(data.length));
 			}
-			outputStream.write(data);
+			if(!isHead){
+				outputStream.write(data);
+			}
 		}else {
 			String extString = fileObject.getName();
 			int pos = extString.lastIndexOf('.');
@@ -167,8 +175,10 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				extString = Mime.toContentType(extString.substring(pos + 1));
 			}
 			sendResponse(HttpResponse.OkayFile(fileObject.length(), extString));
-			FileInputStream fileStream = new FileInputStream(fileObject);
-			sendResponse(fileStream);
+			if (!isHead) {
+				FileInputStream fileStream = new FileInputStream(fileObject);
+				sendResponse(fileStream);
+			}
 		}
 		logger.info("transfer complete:" + fileObject.getAbsolutePath());
 	}
@@ -182,7 +192,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		stream.close();
 	}
 	
-	private void sendInnerResource(String filePath) throws Exception{
+	private void sendInnerResource(String filePath,boolean isHead) throws Exception{
 		byte[] data = config.getResource(filePath);
 		if (null == data) {
 			sendResponse(HttpResponse.FileNotFound());
@@ -195,7 +205,9 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				extString = Mime.toContentType(extString.substring(pos + 1));
 			}
 			sendResponse(HttpResponse.OkayFile(data.length, extString));
-			outputStream.write(data);
+			if(!isHead){
+				outputStream.write(data);
+			}
 		}
 	}
 }
