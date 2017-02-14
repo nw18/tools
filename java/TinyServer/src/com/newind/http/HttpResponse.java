@@ -16,6 +16,7 @@ public class HttpResponse {
 	public static final String HTML_COL_SPAN = "&nbsp;&nbsp;</td><td>";
 	public static final String HTML_ROW_SPAN = "</td></tr><tr><td>";
 	public static final String HTML_ROW_SPAN_EMPTY = "</td></tr><tr><td colspan=3>";
+	public static final byte[] CRLF = new byte[] {13,10};
 	
 	public static String OkayHtml(int length){
 		return String.format("HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-type: text/html\r\n\r\n", length);
@@ -23,6 +24,10 @@ public class HttpResponse {
 	
 	public static String OkayFile(long contentLength,String contentType){
 		return String.format("HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-type: %s\r\n\r\n",contentLength,contentType);
+	}
+	
+	public static String OkayFileTrunked(String contentType){
+		return String.format("HTTP/1.1 200 OK\r\nContent-type: %s\r\nTransfer-Encoding: chunked\r\n\r\n",contentType);
 	}
 	
 	public static String BadRequest() {
@@ -47,40 +52,36 @@ public class HttpResponse {
 		});
 		stringBuilder.append(HTML_HEAD);
 		String rootPath = root.getAbsolutePath();
-		try{
-			stringBuilder.append("<a href=\""); 
-			String parent = dir.getAbsolutePath().substring(rootPath.length()) + "/..";
-			stringBuilder.append(parent.replace('\\', '/'));
-			stringBuilder.append("\">[Parent Directory]</a>");
-			stringBuilder.append(HTML_COL_SPAN);
-			stringBuilder.append("[Size]");
-			stringBuilder.append(HTML_COL_SPAN);
-			stringBuilder.append("[Modify]");
-			if(fileList != null && fileList.length != 0){
-				stringBuilder.append(HTML_ROW_SPAN);
-				SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-				Date date = new Date(0);
-				for(int i = 0; i < fileList.length; i++){
-					File file = fileList[i];
-					String absWebPath = file.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
-					stringBuilder.append("<a href=\"" + absWebPath + "\">" + file.getName() + "</a>");
-					stringBuilder.append(HTML_COL_SPAN);
-					if (file.isFile()) {						
-						stringBuilder.append(file.length());
-					}
-					stringBuilder.append(HTML_COL_SPAN);
-					date.setTime(file.lastModified());
-					stringBuilder.append(timeFormat.format(date));
-					if (i != fileList.length - 1) {
-						stringBuilder.append(HTML_ROW_SPAN);
-					}
+		stringBuilder.append("<a href=\""); 
+		String parent = dir.getAbsolutePath().substring(rootPath.length()) + "/..";
+		stringBuilder.append(parent.replace('\\', '/'));
+		stringBuilder.append("\">[Parent Directory]</a>");
+		stringBuilder.append(HTML_COL_SPAN);
+		stringBuilder.append("[Size]");
+		stringBuilder.append(HTML_COL_SPAN);
+		stringBuilder.append("[Modify]");
+		if(fileList != null && fileList.length != 0){
+			stringBuilder.append(HTML_ROW_SPAN);
+			SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+			Date date = new Date(0);
+			for(int i = 0; i < fileList.length; i++){
+				File file = fileList[i];
+				String absWebPath = file.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
+				stringBuilder.append("<a href=\"" + absWebPath + "\">" + file.getName() + "</a>");
+				stringBuilder.append(HTML_COL_SPAN);
+				if (file.isFile()) {						
+					stringBuilder.append(file.length());
 				}
-			}else {
-				stringBuilder.append(HTML_ROW_SPAN_EMPTY);
-				stringBuilder.append("nothing");
+				stringBuilder.append(HTML_COL_SPAN);
+				date.setTime(file.lastModified());
+				stringBuilder.append(timeFormat.format(date));
+				if (i != fileList.length - 1) {
+					stringBuilder.append(HTML_ROW_SPAN);
+				}
 			}
-		}catch(Exception e){
-			e.printStackTrace();
+		}else {
+			stringBuilder.append(HTML_ROW_SPAN_EMPTY);
+			stringBuilder.append("nothing");
 		}
 		stringBuilder.append(HTML_TAIL);
 		return stringBuilder.toString();
@@ -96,27 +97,23 @@ public class HttpResponse {
 			}
 		});
 		String rootPath = root.getAbsolutePath();
-		try{
-			String current = dir.getAbsolutePath().substring(rootPath.length()).replace('\\', '/'); 
-			String parent = current + "/..";
-			stringBuilder.append(String.format("{\"parent\":\"%s\",\n",parent));
-			stringBuilder.append("\"data\":[");
-			if(fileList != null && fileList.length != 0){
-				for(int i = 0; i < fileList.length; i++){
-					File file = fileList[i];
-					stringBuilder.append(String.format("[%d,\"%s\",%d,%d]",
-							file.isDirectory() ? 1 : 0,
-							file.getName(),
-							file.length(),
-							file.lastModified()
-							));
-					if (i != fileList.length - 1) {
-						stringBuilder.append(",\n");
-					}
+		String current = dir.getAbsolutePath().substring(rootPath.length()).replace('\\', '/'); 
+		String parent = current + "/..";
+		stringBuilder.append(String.format("{\"parent\":\"%s\",\n",parent));
+		stringBuilder.append("\"data\":[");
+		if(fileList != null && fileList.length != 0){
+			for(int i = 0; i < fileList.length; i++){
+				File file = fileList[i];
+				stringBuilder.append(String.format("[%d,\"%s\",%d,%d]",
+						file.isDirectory() ? 1 : 0,
+						file.getName(),
+						file.length(),
+						file.lastModified()
+						));
+				if (i != fileList.length - 1) {
+					stringBuilder.append(",\n");
 				}
 			}
-		}catch(Exception e){
-			e.printStackTrace();
 		}
 		stringBuilder.append("]}");
 		return stringBuilder.toString();
