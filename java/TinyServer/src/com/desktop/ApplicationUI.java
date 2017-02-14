@@ -78,7 +78,11 @@ public class ApplicationUI extends JFrame{
 		String[] lastConfig = new String[config.length];
 		int i = 0;
 		try {
-			inputStream = new FileInputStream(LAST_CONFIG);
+			File lastFile = new File(LAST_CONFIG);
+			if(!(lastFile.exists() && lastFile.isFile() && lastFile.canRead())){
+				return;
+			}
+			inputStream = new FileInputStream(lastFile);
 			bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 			while(i < lastConfig.length){
 				String line = bufferedReader.readLine();
@@ -88,14 +92,10 @@ public class ApplicationUI extends JFrame{
 				lastConfig[i++] = line;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}finally {
 			if (inputStream != null) {
-				try {
-					inputStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				try { inputStream.close(); } catch (IOException e) { }
 			}
 		}
 		if (i == lastConfig.length) {
