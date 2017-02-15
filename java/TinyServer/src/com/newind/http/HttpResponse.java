@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 
+import com.newind.util.TextUtil;
+
 public class HttpResponse {
 	public static final String FAVICON = "favicon.ico";
 	public static final String HTML_HEAD = "<!DOCTYPE html><html><head>"
@@ -43,81 +45,56 @@ public class HttpResponse {
 		return String.format("HTTP/1.1 200 OK\r\nContent-type:text/plain\r\nContent-Length: %d\r\n\r\n%s",text.length(),text);
 	}
 	
-	public static String listDirectoryHTML(File dir,File root){
-		StringBuilder stringBuilder = new StringBuilder();
+	public static void listDirectoryHTML(File dir,File root,HttpConnection connection) throws IOException{
 		File fileList[] = dir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File file, String name) {
 				return !name.startsWith(".");
 			}
 		});
-		stringBuilder.append(HTML_HEAD);
+		connection.sendTrunkBegin();
+		connection.sendTrunk(HTML_HEAD);
 		String rootPath = root.getAbsolutePath();
-		stringBuilder.append("<a href=\""); 
-		String parent = dir.getAbsolutePath().substring(rootPath.length()) + "/..";
-		stringBuilder.append(parent.replace('\\', '/'));
-		stringBuilder.append("\">[Parent Directory]</a>");
-		stringBuilder.append(HTML_COL_SPAN);
-		stringBuilder.append("[Size]");
-		stringBuilder.append(HTML_COL_SPAN);
-		stringBuilder.append("[Modify]");
+		//like D:\\ path,the last character make path has no / beigin.
+		if (rootPath.endsWith("//") || rootPath.endsWith("\\")) {
+			rootPath = rootPath.substring(0, rootPath.length() - 1);
+		}
+		connection.sendTrunk("<a href=\""); 
+		String parent = dir.getAbsolutePath().substring(rootPath.length());
+		parent = parent.replace('\\', '/');
+		if (!TextUtil.equal(parent, "/")) {
+			connection.sendTrunk(parent);
+		}
+		connection.sendTrunk("/..\">[Parent Directory]</a>");
+		connection.sendTrunk(HTML_COL_SPAN);
+		connection.sendTrunk("[Size]");
+		connection.sendTrunk(HTML_COL_SPAN);
+		connection.sendTrunk("[Modify]");
 		if(fileList != null && fileList.length != 0){
-			stringBuilder.append(HTML_ROW_SPAN);
+			connection.sendTrunk(HTML_ROW_SPAN);
 			SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			Date date = new Date(0);
 			for(int i = 0; i < fileList.length; i++){
 				File file = fileList[i];
 				String absWebPath = file.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
-				stringBuilder.append("<a href=\"" + absWebPath + "\">" + file.getName() + "</a>");
-				stringBuilder.append(HTML_COL_SPAN);
+				connection.sendTrunk("<a href=\"" + absWebPath + "\">" + file.getName() + "</a>");
+				connection.sendTrunk(HTML_COL_SPAN);
 				if (file.isFile()) {						
-					stringBuilder.append(file.length());
+					connection.sendTrunk(String.valueOf(file.length()));
 				}
-				stringBuilder.append(HTML_COL_SPAN);
+				connection.sendTrunk(HTML_COL_SPAN);
 				date.setTime(file.lastModified());
-				stringBuilder.append(timeFormat.format(date));
+				connection.sendTrunk(timeFormat.format(date));
 				if (i != fileList.length - 1) {
-					stringBuilder.append(HTML_ROW_SPAN);
+					connection.sendTrunk(HTML_ROW_SPAN);
 				}
 			}
 		}else {
-			stringBuilder.append(HTML_ROW_SPAN_EMPTY);
-			stringBuilder.append("nothing");
+			connection.sendTrunk(HTML_ROW_SPAN_EMPTY);
+			connection.sendTrunk("nothing");
 		}
-		stringBuilder.append(HTML_TAIL);
-		return stringBuilder.toString();
-	}
-	
-	//make the directory list as a JSON format result.
-	public static String listDirectoryJSON(File dir,File root){
-		StringBuilder stringBuilder = new StringBuilder();
-		File fileList[] = dir.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File file, String name) {
-				return !name.startsWith(".");
-			}
-		});
-		String rootPath = root.getAbsolutePath();
-		String current = dir.getAbsolutePath().substring(rootPath.length()).replace('\\', '/'); 
-		String parent = current + "/..";
-		stringBuilder.append(String.format("{\"parent\":\"%s\",\n",parent));
-		stringBuilder.append("\"data\":[");
-		if(fileList != null && fileList.length != 0){
-			for(int i = 0; i < fileList.length; i++){
-				File file = fileList[i];
-				stringBuilder.append(String.format("[%d,\"%s\",%d,%d]",
-						file.isDirectory() ? 1 : 0,
-						file.getName(),
-						file.length(),
-						file.lastModified()
-						));
-				if (i != fileList.length - 1) {
-					stringBuilder.append(",\n");
-				}
-			}
-		}
-		stringBuilder.append("]}");
-		return stringBuilder.toString();
+		connection.sendTrunk(HTML_TAIL);
+		connection.sendTrunkEnd();
 	}
 
 	public static void listDirectoryJSONByTrunk(File dir,File root,HttpConnection connection) throws IOException{

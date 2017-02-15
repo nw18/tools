@@ -181,8 +181,6 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			}
 		}
 		if (fileObject.isDirectory()) {
-			byte[] data;
-			String listString;
 			if (config.isJsonMode()) {
 				boolean isJsonRequest = true;
 				if (fileObject == rootFile) {
@@ -197,22 +195,13 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				}
 				if (!isJsonRequest) {
 					sendInnerResource("application.html",isHead);
-					return;
 				}else {
-//					listString = HttpResponse.listDirectoryJSON(fileObject, rootFile);
-//					data = listString.getBytes(config.getCodeType());
-//					sendResponse(HttpResponse.OkayFile(data.length, "application/json"));
 					sendResponse(HttpResponse.OkayFileTrunked("application/json"));
 					HttpResponse.listDirectoryJSONByTrunk(fileObject,rootFile,this);
-					return;
 				}
 			}else {
-				listString = HttpResponse.listDirectoryHTML(fileObject, rootFile);
-				data = listString.getBytes(config.getCodeType());
-				sendResponse(HttpResponse.OkayHtml(data.length));
-			}
-			if(!isHead){
-				sendResponse(data);
+				sendResponse(HttpResponse.OkayFileTrunked("text/html"));
+				HttpResponse.listDirectoryHTML(fileObject, rootFile,this);
 			}
 		}else {
 			String extString = fileObject.getName();
