@@ -1,5 +1,6 @@
 package com.newind;
 
+import java.io.File;
 import java.util.logging.Logger;
 
 import com.newind.base.LogManager;
@@ -93,6 +94,27 @@ public class Application {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.info("bye with exception.");
+		}
+	}
+	
+
+	public static void print(File file,String myPrevPath,String chPrePath){
+		System.out.println(myPrevPath + file.getName());
+		if(file.isDirectory()){
+			File[] files =  file.listFiles();
+			for(int i = 0; files != null && i < files.length; i++){
+				File subFile =  files[i];
+				String nextPrePath = chPrePath;
+				String subPrevPath = chPrePath;
+				if(i == files.length - 1){
+					nextPrePath += "└─";
+					subPrevPath += "  ";
+				}else{
+					nextPrePath += "├─";
+					subPrevPath += "│ ";
+				}
+				print(subFile,nextPrePath,subPrevPath);
+			}
 		}
 	}
 }
