@@ -19,17 +19,24 @@ public class ApplicationPooling extends Pooling<Socket, PoolingWorker<Socket>> {
 	}
 
 	static class AppWorker implements PoolingWorker<Socket>{
+		private byte[] buffer = new byte[ApplicationConfig.instance().getRecvBufferSize()];
+		private HttpConnection httpConnection;
+		private FtpConnection ftpConnection;
 		@Override
 		public void handle(Socket param) {
 			if(null == param){
 				return;
 			}
 			if(param.getLocalPort() == ApplicationConfig.instance().getHttpPort()){
-				HttpConnection connection = new HttpConnection();
-				connection.handle(param);
+				if(httpConnection == null){
+					httpConnection = new HttpConnection(buffer);
+				}
+				httpConnection.handle(param);
 			}else if (param.getLocalPort() == ApplicationConfig.instance().getFtpPort()) {
-				FtpConnection connection = new FtpConnection();
-				connection.handle(param);
+				if(ftpConnection == null){
+					ftpConnection = new FtpConnection(buffer);
+				}
+				ftpConnection.handle(param);
 			}else {
 				try{
 					LogManager.getLogger().warning("unhandle " + param.getLocalAddress());

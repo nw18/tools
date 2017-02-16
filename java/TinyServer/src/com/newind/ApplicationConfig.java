@@ -15,7 +15,7 @@ public class ApplicationConfig {
 	private int ftpPort = 2121;
 	private String ip = "0.0.0.0";
 	private int threadCount = 64;
-	private int recvBufferSize = 8 * 1024 + 1;
+	private int recvBufferSize = 8 * 1024;
 	private boolean isShuttingDown = false;
 	private int recvTimeout = 5 * 1000;
 	private int connectionTimeout = 5 * 60 * 1000;

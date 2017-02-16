@@ -22,12 +22,17 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	public static final String TAG = HttpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
 	private ApplicationConfig config = ApplicationConfig.instance();
-	private byte[] buffer = new byte[config.getRecvBufferSize()];
+	private byte[] buffer;
 	private int MAX_TRUNK_SIZE = Math.min(config.getRecvBufferSize() / 2,1440);
 	private int trunkOffset = 0;
 	private File rootFile = new File(config.getRoot());
 	private InputStream inputStream;
 	private OutputStream outputStream;
+	
+	public HttpConnection(byte[] buffer) {
+		this.buffer = buffer;
+	}
+	
 	@Override
 	public void handle(Socket param) {
 		SocketAddress address = param.getRemoteSocketAddress();

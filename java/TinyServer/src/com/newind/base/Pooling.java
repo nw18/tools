@@ -42,14 +42,14 @@ public abstract class Pooling<P,T extends PoolingWorker<P>>{
 	}
 	
 	public int setup(){
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				handProc(makeWorker());
+			}
+		};
 		for(int i = 0; i < maxCount;i++){
-			Thread t = new Thread(){
-				PoolingWorker<P> worker = makeWorker();
-				@Override
-				public void run() {
-					handProc(worker);
-				}
-			};
+			Thread t = new Thread(runnable,"WorkerThread");
 			threadList.add(t);
 			t.start();
 		}

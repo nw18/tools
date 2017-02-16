@@ -45,7 +45,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	public static final String TAG = FtpConnection.class.getSimpleName();
 	private Logger logger = LogManager.getLogger();
 	private ApplicationConfig config = ApplicationConfig.instance();
-	private byte[] buffer = new byte[config.getRecvBufferSize()];
+	private byte[] buffer;
 	private File currentDirectory = new File(config.getRoot());
 	private InputStream inputStream;
 	private OutputStream outputStream;
@@ -69,6 +69,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 				}
 			}
 		}
+	}
+	
+	public FtpConnection(byte[] buffer) {
+		this.buffer = buffer;
 	}
 	
 	@Override
