@@ -109,9 +109,8 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 					if (config.isShuttingDown()) {
 						break;
 					}
-					if (System.currentTimeMillis() - last_recv_time > config
-							.getConnectionTimeout()) {
-						logger.info("connection " + param.getRemoteSocketAddress() + " timeout.");
+					if (System.currentTimeMillis() - last_recv_time > config.getConnectionTimeout()) {
+						logger.info("connection timeout:" + param.getRemoteSocketAddress());
 						break;
 					}
 				} catch (CloseConnection e) {

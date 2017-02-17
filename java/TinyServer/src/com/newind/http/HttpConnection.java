@@ -64,7 +64,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 						break;
 					}
 					if(System.currentTimeMillis() - last_recv_time > config.getConnectionTimeout()){
-						logger.info(param.getRemoteSocketAddress() + " connect timeout.");
+						logger.info("connect timeout:" + param.getRemoteSocketAddress());
 						break;
 					}
 				}

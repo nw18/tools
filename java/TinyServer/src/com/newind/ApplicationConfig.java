@@ -18,7 +18,7 @@ public class ApplicationConfig {
 	private int recvBufferSize = 8 * 1024;
 	private boolean isShuttingDown = false;
 	private int recvTimeout = 5 * 1000;
-	private int connectionTimeout = 5 * 60 * 1000;
+	private int connectionTimeout = 1 * 60 * 1000;
 	private String userName = "admin";
 	private String passWord = "123456";
 	private boolean writable = false;
