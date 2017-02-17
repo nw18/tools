@@ -202,7 +202,7 @@ public class ApplicationConfig {
 				//TODO the inner resource per-load here
 				addResource("favicon.ico");
 				addResource("application.html");
-				addResource("jquery-3.1.1.min.js");				
+				addResource("jquery-1.12.4.min.js");
 			}
 		}
 		return resourceMap.get(name);

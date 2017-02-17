@@ -8,12 +8,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.newind.android.ApplicationMain;
@@ -42,11 +45,10 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
             "json_mode", "true",
             "user_name", "admin",
             "pass_word", "123456",
-            "thread_count", "64"
+            "thread_count", "16"
     };
 
     private Map<String,View> tag2view = new HashMap<>();
-    private int[] IDS = new int[] { R.id.bt_browse_ip,R.id.bt_browse_path,R.id.bt_start };
 
     private void setValue(String key, String value) {
         for (int i = 0; i < config.length - 1; i += 2) {
@@ -130,9 +132,14 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
             View view = root.getChildAt(i);
             if (ViewGroup.class.isInstance(view)){
                 findAll((ViewGroup)view);
-            }else if (SwitchEx.class.isInstance(view)
-                    || EditText.class.isInstance(view)){
+            }else if (view instanceof SwitchEx || view instanceof EditText){
                 tag2view.put(view.getTag().toString(),view);
+            }else if (view instanceof Button){
+                Button bt = (Button) view;
+                bt.setOnClickListener(this);
+            }
+            if(view instanceof TextView){
+                ((TextView)view).setTextSize(TypedValue.COMPLEX_UNIT_SP,15);
             }
         }
     }
@@ -181,9 +188,7 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
             actionBar.setTitle(R.string.title_main);
             actionBar.setDisplayShowHomeEnabled(true);
         }
-        for (int id : IDS){
-            findViewById(id).setOnClickListener(this);
-        }
+        findAll((ViewGroup) findViewById(R.id.ll_content));
         File dir = Environment.getExternalStorageDirectory();
         if (dir != null && dir.exists()){
             setValue("root",dir.getAbsolutePath());

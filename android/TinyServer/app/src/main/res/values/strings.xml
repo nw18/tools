@@ -21,7 +21,7 @@
     <string name="title_main">启动配置</string>
     <string name="title_log_cat">日志</string>
     <string name="please_wait">请稍等..</string>
-    <string name="tv_help_document" formatted="false">用完及时关闭。</string>
+    <string name="tv_help_document" formatted="false">这是一个运行在手机上的小型服务器。\n\n欢迎反馈问题: nw18148@gmail.com</string>
     <string name="bt_dir_select">选定当前</string>
     <string name="title_about">关于</string>
     <string name="title_browse">选择目录</string>

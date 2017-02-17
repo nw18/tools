@@ -21,9 +21,11 @@ public abstract class TcpServer extends Thread{
 		try {
 			logger.info("server setup");
 			while(running){
+				Socket peer = socket.accept();
 				if(running){
-					handSocket(socket.accept());
+					handSocket(peer);
 				}else{
+					peer.close();
 					break;
 				}
 			}
