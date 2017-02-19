@@ -29,10 +29,10 @@ div{
 	width: 1024px;
 }
 </style>
-<script type="text/javascript" src="/?jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="/jquery-1.12.4.min.js"></script>
 <script type="text/javascript">
 function GoTo(url){
-    $.getJSON(url,function(result,r2){
+    $.getJSON(url,{},function(result,status,xhr){
         $("#parent").attr("href","javascript:GoTo('" + result.parent + "')");
         $("#content tr:gt(0)").remove();
         var parent = result.parent.substring(0,result.parent.length-2);

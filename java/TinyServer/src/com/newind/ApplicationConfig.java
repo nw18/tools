@@ -31,6 +31,9 @@ public class ApplicationConfig {
 	public static ApplicationConfig instance() {
 		if(null == _config_){
 			_config_ = new ApplicationConfig();
+			_config_.addResource("favicon.ico");
+			_config_.addResource("application.html");
+			_config_.addResource("jquery-1.12.4.min.js");
 		}
 		return _config_;
 	}
@@ -197,15 +200,11 @@ public class ApplicationConfig {
 	}
 	
 	public byte[] getResource(String name){
-		synchronized (resourceMap) {
-			if (resourceMap.size() == 0) {
-				//TODO the inner resource per-load here
-				addResource("favicon.ico");
-				addResource("application.html");
-				addResource("jquery-1.12.4.min.js");
-			}
-		}
 		return resourceMap.get(name);
+	}
+	
+	public boolean isResource(String name){
+		return resourceMap.containsKey(name);
 	}
 	
 	private void addResource(String name){

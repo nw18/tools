@@ -9,7 +9,6 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.URLDecoder;
 import java.util.logging.Logger;
 
 import com.newind.ApplicationConfig;
@@ -58,6 +57,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 					}
 					last_recv_time = System.currentTimeMillis();
 					String reqString = new String(buffer, 0, reqLen);
+					System.out.println(reqString);
 					handleRequest(reqString);
 				}catch(SocketTimeoutException e){
 					if (config.isShuttingDown()) {
@@ -140,48 +140,32 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	}
 	
 	private void handleRequest(String reqString) throws Exception{
-		String fields[] = reqString.split("\r\n");
-		if(fields.length < 1){
+		HttpHead header;
+		try{
+			header = HttpHead.parse(reqString, config.getCodeType());
+		}catch (Exception e) {
+			logger.warning(e.getMessage());
 			sendResponse(HttpResponse.BadRequest());
-			throw new RuntimeException("bad http request");
-		}
-		logger.info("receive request:" + fields[0]);
-		String method[] = fields[0].split(" ");
-		boolean isGet = TextUtil.equal(method[0].toUpperCase(),"GET");
-		boolean isHead = TextUtil.equal(method[0].toUpperCase(), "HEAD");
-		if (method.length != 3 || (!isGet && !isHead)) {
-			sendResponse(HttpResponse.BadRequest());
-			throw new RuntimeException("bad http request:" + fields[0]);
-		}
-		String filePath = URLDecoder.decode(method[1],config.getCodeType());
-		if (filePath.startsWith("/")) {
-			filePath = filePath.substring(1);
-		}
-		//hard code for FAVICON
-		if (filePath.equals(HttpResponse.FAVICON)) {
-			byte[] data = config.getResource(HttpResponse.FAVICON);
-			if (data == null) {
-				sendResponse(HttpResponse.FileNotFound());
-			}else {
-				sendResponse(HttpResponse.OkayFile(data.length, Mime.toContentType("png")));
-				if(!isHead){
-					sendResponse(data);
-				}
-			}
 			return;
+		}
+		logger.info("receive request:" + header);
+		if ((!header.isGet() && !header.isHead())) {
+			sendResponse(HttpResponse.BadRequest());
+			throw new RuntimeException("not supported:" + header);
 		}
 		File fileObject = null;
 		//is is a inner resource,this use a query string.
-		if (filePath.startsWith("?")) {
-			sendInnerResource(filePath.substring(1),isHead);
+		if (config.isResource(header.getUrl().substring(1))) {
+			sendInnerResource(header.getUrl().substring(1),header.isHead());
+			logger.info("transfer complete:" + header.getRawUrl());
 			return;
 		}else {
-			fileObject = TextUtil.isEmpty(filePath) ? rootFile : new File(rootFile,filePath);
+			fileObject = TextUtil.equal(header.getUrl(), "/") ? rootFile : new File(rootFile,header.getUrl().substring(1));
 			if (!fileObject.exists() 
-					|| filePath.startsWith(".")
 					|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
 				logger.warning("not found:\"" + fileObject.getAbsolutePath() + "\" in \"" + config.getRoot() + "\"");
 				sendResponse(HttpResponse.FileNotFound());
+				logger.info("file not found:" + header.getRawUrl());
 				return;
 			}
 		}
@@ -189,17 +173,12 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			if (config.isJsonMode()) {
 				boolean isJsonRequest = true;
 				if (fileObject == rootFile) {
+					String accept = header.getHeadString("accept");
 					String json1 = "application/json", json2 = "text/javascript";
-					for(int i = 0; i < fields.length; i++){
-						String field = fields[i].toLowerCase();
-						if (field.startsWith("accept:")) {
-							isJsonRequest = field.indexOf(json1) > 0 || field.indexOf(json2) > 0;
-							break;
-						}
-					}
+					isJsonRequest = accept.indexOf(json1) > 0 || accept.indexOf(json2) > 0;
 				}
 				if (!isJsonRequest) {
-					sendInnerResource("application.html",isHead);
+					sendInnerResource("application.html",header.isHead());
 				}else {
 					sendResponse(HttpResponse.OkayFileTrunked("application/json"));
 					HttpResponse.listDirectoryJSONByTrunk(fileObject,rootFile,this);
@@ -217,7 +196,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				extString = Mime.toContentType(extString.substring(pos + 1));
 			}
 			sendResponse(HttpResponse.OkayFile(fileObject.length(), extString));
-			if (!isHead) {
+			if (!header.isHead()) {
 				FileInputStream fileStream = new FileInputStream(fileObject);
 				sendResponse(fileStream);
 			}

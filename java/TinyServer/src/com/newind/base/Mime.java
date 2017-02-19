@@ -33,7 +33,7 @@ public class Mime {
 				"aiff:audio/x-aiff", "aifc:audio/x-aiff", "m3u:audio/x-mpegurl", "ram:audio/x-pn-realaudio",
 				"rm:audio/x-pn-realaudio", "rpm:audio/x-pn-realaudio-plugin", "ra:audio/x-realaudio", "wav:audio/x-wav",
 				"pdb:chemical/x-pdb", "xyz:chemical/x-xyz", "bmp:image/bmp", "gif:image/gif", "ief:image/ief",
-				"jpeg:image/jpeg", "jpg:image/jpeg", "jpe:image/jpeg", "png:image/png", "tiff:image/tiff",
+				"jpeg:image/jpeg", "jpg:image/jpeg", "jpe:image/jpeg", "ico:image/png", "png:image/png", "tiff:image/tiff",
 				"tif:image/tiff", "djvu:image/vnd.djvu", "djv:image/vnd.djvu", "wbmp:image/vnd.wap.wbmp",
 				"ras:image/x-cmu-raster", "pnm:image/x-portable-anymap", "pbm:image/x-portable-bitmap",
 				"pgm:image/x-portable-graymap", "ppm:image/x-portable-pixmap", "rgb:image/x-rgb", "xbm:image/x-xbitmap",
