@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
 import com.newind.ApplicationConfig;
@@ -90,13 +91,23 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		outputStream = param.getOutputStream();
 	}
 	
-	private void sendResponse(String str) throws Exception{
-		outputStream.write(str.getBytes(config.getCodeType()));
-		outputStream.flush();
+	private String readLine() throws IOException{
+		int ch = 0;
+		ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+		while (byteBuffer.limit() > 0 && (ch = inputStream.read()) > 0) {
+			if(ch == '\r'){
+				if(inputStream.read() == '\n'){
+					return byteBuffer.put
+				}else{
+					throw new IOException("bad line end.");
+				}
+			}
+			byteBuffer.put((byte)ch);
+		}
 	}
 	
-	private void sendResponse(byte[] data) throws Exception{
-		outputStream.write(data);
+	private void sendResponse(String str) throws Exception{
+		outputStream.write(str.getBytes(config.getCodeType()));
 		outputStream.flush();
 	}
 
