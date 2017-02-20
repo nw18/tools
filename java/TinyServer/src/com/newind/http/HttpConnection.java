@@ -97,13 +97,15 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		while (byteBuffer.limit() > 0 && (ch = inputStream.read()) > 0) {
 			if(ch == '\r'){
 				if(inputStream.read() == '\n'){
-					return byteBuffer.put
+					break;
 				}else{
 					throw new IOException("bad line end.");
 				}
 			}
 			byteBuffer.put((byte)ch);
 		}
+		byteBuffer.flip();
+		return new String(buffer,0,byteBuffer.limit(),config.getCodeType());
 	}
 	
 	private void sendResponse(String str) throws Exception{
