@@ -39,32 +39,24 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		logger.info("handle connection from:" + address.toString());
 		try{
 			attachTo(param);
-			long last_recv_time = System.currentTimeMillis();
+			long lastRequestTime = System.currentTimeMillis();
 			while(true){
 				try{
-					int reqLen = inputStream.read(buffer);
-					if (reqLen <= 0) {
-						logger.info("socket closed.");
-						param.close();
+					String line = readLine();
+					if (TextUtil.isEmpty(line)){
 						break;
 					}
-					if (reqLen >= buffer.length) {
-						logger.info("receive too long reuqest.");
-						sendResponse(HttpResponse.BadRequest());
-						inputStream.close();
-						outputStream.close();
-						param.close();
-						break;
+					HttpHead header = HttpHead.init(line,config.getCodeType());
+					while(!TextUtil.isEmpty((line = readLine()))){
+						header.addHead(line);
 					}
-					last_recv_time = System.currentTimeMillis();
-					String reqString = new String(buffer, 0, reqLen);
-					System.out.println(reqString);
-					handleRequest(reqString);
+					lastRequestTime = System.currentTimeMillis();
+					handleRequest(header);
 				}catch(SocketTimeoutException e){
 					if (config.isShuttingDown()) {
 						break;
 					}
-					if(System.currentTimeMillis() - last_recv_time > config.getConnectionTimeout()){
+					if(System.currentTimeMillis() - lastRequestTime > config.getConnectionTimeout()){
 						logger.info("connect timeout:" + param.getRemoteSocketAddress());
 						break;
 					}
@@ -72,6 +64,8 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			}
 		}catch(SocketException e){
 			logger.info("SocketException " + e.getMessage());
+		}catch (IOException | RuntimeException e){
+			logger.warning("RuntimeException " + e.getMessage());
 		}catch (Exception e) {
 			e.printStackTrace();
 		}finally{
@@ -92,9 +86,12 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	}
 	
 	private String readLine() throws IOException{
-		int ch = 0;
 		ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
-		while (byteBuffer.limit() > 0 && (ch = inputStream.read()) > 0) {
+		while (byteBuffer.limit() > 0) {
+			int ch = inputStream.read();
+			if (ch < 0){
+				throw new IOException("stream end.");
+			}
 			if(ch == '\r'){
 				if(inputStream.read() == '\n'){
 					break;
@@ -103,6 +100,9 @@ public class HttpConnection implements PoolingWorker<Socket>{
 				}
 			}
 			byteBuffer.put((byte)ch);
+		}
+		if (byteBuffer.limit() <= 0){
+			throw new IOException("to long a line.");
 		}
 		byteBuffer.flip();
 		return new String(buffer,0,byteBuffer.limit(),config.getCodeType());
@@ -152,15 +152,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		outputStream.flush();
 	}
 	
-	private void handleRequest(String reqString) throws Exception{
-		HttpHead header;
-		try{
-			header = HttpHead.parse(reqString, config.getCodeType());
-		}catch (Exception e) {
-			logger.warning(e.getMessage());
-			sendResponse(HttpResponse.BadRequest());
-			return;
-		}
+	private void handleRequest(HttpHead header) throws Exception{
 		logger.info("receive request:" + header);
 		if ((!header.isGet() && !header.isHead())) {
 			sendResponse(HttpResponse.BadRequest());

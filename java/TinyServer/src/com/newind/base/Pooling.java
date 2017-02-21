@@ -16,10 +16,6 @@ public abstract class Pooling<P,T extends PoolingWorker<P>>{
 		threadList = new LinkedList<>();
 	}
 	
-	public int getMaxCount() {
-		return maxCount;
-	}
-	
 	private int putTaskI(P param){
 		try {
 			writeObject.acquire();
@@ -45,7 +41,7 @@ public abstract class Pooling<P,T extends PoolingWorker<P>>{
 		Runnable runnable = new Runnable() {
 			@Override
 			public void run() {
-				handProc(makeWorker());
+				handProxy(makeWorker());
 			}
 		};
 		for(int i = 0; i < maxCount;i++){
@@ -64,16 +60,15 @@ public abstract class Pooling<P,T extends PoolingWorker<P>>{
 			try {
 				thread.join();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		threadList.clear();
 	}
 	
-	protected void handProc(PoolingWorker<P> handler){
+	protected void handProxy(T handler){
 		try {
-			P p = null;
+			P p;
 			while(true){
 				readObject.acquire();
 				synchronized (pendList) {				
@@ -90,5 +85,5 @@ public abstract class Pooling<P,T extends PoolingWorker<P>>{
 		}
 	}
 	
-	protected abstract PoolingWorker<P> makeWorker(); 
+	protected abstract T makeWorker();
 }
