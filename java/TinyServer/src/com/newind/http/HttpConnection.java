@@ -154,10 +154,14 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	
 	private void handleRequest(HttpHead header) throws Exception{
 		logger.info("receive request:" + header);
-		if ((!header.isGet() && !header.isHead())) {
-			sendResponse(HttpResponse.BadRequest());
-			throw new RuntimeException("not supported:" + header);
+		if (header.isGet() || header.isHead()) {
+			handleRequestGet(header);
+		}else if (header.isPost()){
+			handleRequestPost(header);
 		}
+	}
+
+	private void handleRequestGet(HttpHead header) throws Exception{
 		File fileObject = null;
 		//is is a inner resource,this use a query string.
 		if (config.isResource(header.getUrl().substring(1))) {
@@ -166,7 +170,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			return;
 		}else {
 			fileObject = TextUtil.equal(header.getUrl(), "/") ? rootFile : new File(rootFile,header.getUrl().substring(1));
-			if (!fileObject.exists() 
+			if (!fileObject.exists()
 					|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
 				logger.warning("not found:\"" + fileObject.getAbsolutePath() + "\" in \"" + config.getRoot() + "\"");
 				sendResponse(HttpResponse.FileNotFound());
@@ -197,7 +201,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			int pos = extString.lastIndexOf('.');
 			if (pos < 0) {
 				extString = Mime.toContentType("");
-			}else {				
+			}else {
 				extString = Mime.toContentType(extString.substring(pos + 1));
 			}
 			sendResponse(HttpResponse.OkayFile(fileObject.length(), extString));
@@ -208,7 +212,12 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		}
 		logger.info("transfer complete:" + fileObject.getAbsolutePath());
 	}
-	
+
+	private void handleRequestPost(HttpHead header) throws Exception{
+		sendResponse(HttpResponse.BadRequest());
+		throw new RuntimeException("not supported:" + header);
+	}
+
 	private void sendResponse(InputStream stream) throws IOException {
 		int len = 0;
 		while((len = stream.read(buffer,0,buffer.length)) > 0){
