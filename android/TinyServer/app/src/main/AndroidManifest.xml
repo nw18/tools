@@ -11,18 +11,22 @@
         android:allowBackup="true"
         android:icon="@mipmap/logo"
         android:label="@string/app_name"
-        android:supportsRtl="true"
         android:largeHeap="true"
+        android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:launchMode="standard"
-            android:alwaysRetainTaskState="true"
-            android:name=".activities.ActivityMain"
-            android:label="@string/app_name">
+        <activity android:name=".activities.ActivityStart">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".activities.ActivityMain"
+            android:alwaysRetainTaskState="true"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="adjustUnspecified|stateHidden"
+            android:configChanges="orientation|keyboardHidden"
+            android:launchMode="standard">
         </activity>
         <activity
             android:name=".activities.ActivityLogCat"
@@ -32,7 +36,10 @@
             android:label="@string/title_about" />
         <activity
             android:name=".activities.ActivityBrowse"
-            android:label="@string/title_browse"></activity>
+            android:label="@string/title_browse" />
+        <activity
+            android:name=".activities.ActivityNull"
+            android:launchMode="standard" />
     </application>
 
 </manifest>

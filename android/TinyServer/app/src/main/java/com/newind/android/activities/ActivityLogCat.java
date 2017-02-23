@@ -2,8 +2,10 @@ package com.newind.android.activities;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
@@ -109,11 +111,13 @@ public class ActivityLogCat extends AppCompatActivity {
         },100,40);
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        Intent it = new Intent(this,ActivityNull.class);
         Notification notification = builder.setContentTitle(getResources().getString(R.string.app_name))
                 .setContentText(ApplicationMain.getServer().getServerAddresses().replace("///","//"))
                 .setSmallIcon(R.mipmap.logo)
                 .setWhen(System.currentTimeMillis())
                 .setPriority(Notification.PRIORITY_DEFAULT)
+                .setContentIntent(PendingIntent.getActivity(this,1,it,PendingIntent.FLAG_UPDATE_CURRENT))
                 .setOngoing(true)
                 .setAutoCancel(false).build();
         notificationManager.notify(R.id.activity_log_cat,notification);

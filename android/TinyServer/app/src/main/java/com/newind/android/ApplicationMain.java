@@ -14,11 +14,14 @@ public class ApplicationMain extends Application {
     @Override
     public void onCreate() {
         LogManager.disableLogFile();
-        server = new com.newind.Application();
         ActivityLogCat.init();
     }
 
     public static com.newind.Application getServer(){
         return  server;
+    }
+
+    public static void makeServer(){
+        server = new com.newind.Application();
     }
 }
