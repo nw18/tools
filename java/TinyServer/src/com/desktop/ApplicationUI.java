@@ -47,7 +47,7 @@ public class ApplicationUI extends JFrame{
 		threadCount = new JTextField(getValue("thread_count"));
 		httpOn = new JCheckBox("http on", Boolean.parseBoolean(getValue("http_on")));
 		ftpOn = new JCheckBox("ftp on", Boolean.parseBoolean(getValue("ftp_on")));
-		writable = new JCheckBox("ftp writable",Boolean.parseBoolean(getValue("writable")));
+		writable = new JCheckBox("writable",Boolean.parseBoolean(getValue("writable")));
 		jsonMode = new JCheckBox("http output in json format", Boolean.parseBoolean(getValue("json_mode")));
 	}
 	

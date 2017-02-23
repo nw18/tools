@@ -184,25 +184,8 @@ public class HttpConnection implements PoolingWorker<Socket>{
 	private File url2file(String url){
 		return  TextUtil.equal(url, "/") ? rootFile : new File(rootFile,url.substring(1));
 	}
-	
-	private void handleRequest(HttpHead header) throws Exception{
-		logger.info("receive request:" + header);
-		if (header.isGet() || header.isHead()) {
-			handleRequestGet(header);
-		}else if (header.isPost()){
-			handleRequestPost(header);
-		}
-	}
 
-	private void handleRequestGet(HttpHead header) throws Exception{
-		//is is a inner resource,this use a query string.
-		if (config.isResource(header.getUrl().substring(1))) {
-			sendInnerResource(header.getUrl().substring(1),header.isHead());
-			logger.info("transfer complete:" + header.getRawUrl());
-			return;
-		}
-
-		File fileObject = url2file(header.getUrl());
+	private void sendFileResponse(File fileObject,HttpHead header) throws Exception{
 		if (!fileObject.exists()
 				|| !fileObject.getAbsolutePath().startsWith(config.getRoot())) {
 			logger.warning("not found:\"" + fileObject.getAbsolutePath() + "\" in \"" + config.getRoot() + "\"");
@@ -245,6 +228,29 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		}
 		logger.info("transfer complete:" + fileObject.getAbsolutePath());
 	}
+	
+	private void handleRequest(HttpHead header) throws Exception{
+		logger.info("receive request:" + header);
+		if (header.isGet() || header.isHead()) {
+			handleRequestGet(header);
+		}else if (header.isPost() && config.isWritable()){
+			handleRequestPost(header);
+		}else {
+			throw new RuntimeException("not support method:" + header.getMethod());
+		}
+	}
+
+	private void handleRequestGet(HttpHead header) throws Exception{
+		//is is a inner resource,this use a query string.
+		if (config.isResource(header.getUrl().substring(1))) {
+			sendInnerResource(header.getUrl().substring(1),header.isHead());
+			logger.info("transfer complete:" + header.getRawUrl());
+			return;
+		}
+
+		File fileObject = url2file(header.getUrl());
+		sendFileResponse(fileObject,header);
+	}
 
 	private void handleRequestPost(HttpHead header) throws Exception{
 		String contentType = header.getHeadString("content-type");
@@ -260,7 +266,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			sendResponse(HttpResponse.OkayText("only multipart/form-data supported."));
 			throw new RuntimeException("bad content type.");
 		}
-		byte[] boundary = ("--" + contentTypeFields[1].substring("boundary=".length()) + "\r\n").getBytes();
+		byte[] boundary = ("--" + contentTypeFields[1].substring("boundary=".length())).getBytes();
 		File tarDir = url2file(header.getUrl());
 		if (!tarDir.exists() || !tarDir.isDirectory()){
 			sendResponse("directory not exists.");
@@ -268,6 +274,13 @@ public class HttpConnection implements PoolingWorker<Socket>{
 		}
 		readBoundary(boundary);
 		while (true) {
+			String emptyLine = readLine();
+			if (TextUtil.equal(emptyLine,"--")){
+				break;
+			}
+			if (!TextUtil.isEmpty(emptyLine)){
+				throw new IOException("bad form data parse.");
+			}
 			String contentDisposition = readLine();
 			if (TextUtil.isEmpty(contentDisposition)){
 				break;
@@ -277,7 +290,7 @@ public class HttpConnection implements PoolingWorker<Socket>{
 					|| !contentType.startsWith("Content-Type:")){
 				throw new IOException("bad content disposition / type.");
 			}
-			String emptyLine = readLine();
+			emptyLine = readLine();
 			if (!TextUtil.isEmpty(emptyLine)){
 				throw new IOException("acquire empty line but:" + emptyLine);
 			}
@@ -296,24 +309,35 @@ public class HttpConnection implements PoolingWorker<Socket>{
 			int pos = fileName.replace('\\','/').lastIndexOf('/');
 			if (pos > 0){
 				fileName = fileName.substring(pos + 1);
-				fileName = fileName.replace("\"","");
 			}
-			FileOutputStream fileOutputStream = new FileOutputStream(new File(tarDir,fileName));
-			try {
+			fileName = fileName.replace("\"","");
+
+			if (TextUtil.isEmpty(fileName)){
 				CycleTest cycleTest = new CycleTest(boundary);
-				while (!cycleTest.isEqual()) {
-					int len = readToBoundary(cycleTest, buffer);
-					if (len > 0) {
-						fileOutputStream.write(buffer, 0, len);
+				readToBoundary(cycleTest,buffer);
+				logger.warning("accept empty field.");
+			}else {
+				File tarFile = new File(tarDir, fileName);
+				FileOutputStream fileOutputStream = new FileOutputStream(tarFile);
+				try {
+					logger.info("receive begin:" + tarFile.getAbsolutePath());
+					CycleTest cycleTest = new CycleTest(boundary);
+					while (!cycleTest.isEqual()) {
+						int len = readToBoundary(cycleTest, buffer);
+						if (len > 0) {
+							fileOutputStream.write(buffer, 0, len);
+						}
 					}
+					fileOutputStream.flush();
+					logger.info("receive complete:" + tarFile.getAbsolutePath());
+				} catch (IOException e) {
+					throw e;
+				} finally {
+					fileOutputStream.close();
 				}
-			}catch (IOException e){
-				throw e;
-			}finally {
-				fileOutputStream.close();
 			}
-			sendResponse(HttpResponse.OkayText("file save ok."));
 		}
+		sendFileResponse(tarDir,header);
 	}
 
 	private void sendResponse(InputStream stream) throws IOException {

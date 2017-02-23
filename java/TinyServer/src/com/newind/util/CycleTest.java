@@ -18,7 +18,7 @@ public class CycleTest {
     }
 
     public boolean isFull(){
-        return ptr > boundary.length;
+        return ptr >= boundary.length;
     }
 
     public byte get(int i){
