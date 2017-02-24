@@ -203,7 +203,11 @@ public class HttpConnection implements PoolingWorker<Socket>{
 					isJsonRequest = accept.indexOf(json1) > 0 || accept.indexOf(json2) > 0;
 				}
 				if (!isJsonRequest) {
-					sendInnerResource("application.html",header.isHead());
+					if (config.isWritable()){
+						sendInnerResource("index2.html", header.isHead());
+					}else {
+						sendInnerResource("index.html", header.isHead());
+					}
 				}else {
 					sendResponse(HttpResponse.OkayFileTrunked("application/json"));
 					HttpResponse.listDirectoryJSONByTrunk(fileObject,rootFile,this);

@@ -31,9 +31,11 @@ public class ApplicationConfig {
 	public static ApplicationConfig instance() {
 		if(null == _config_){
 			_config_ = new ApplicationConfig();
-			_config_.addResource("favicon.ico");
-			_config_.addResource("application.html");
-			_config_.addResource("jquery-1.12.4.min.js");
+			byte[] tmp = new byte[128*1024]; //TODO the max size of the file.
+			_config_.addResource(tmp,"favicon.ico");
+			_config_.addResource(tmp,"index.html");
+			_config_.addResource(tmp,"index2.html");
+			_config_.addResource(tmp,"jquery-1.12.4.min.js");
 		}
 		return _config_;
 	}
@@ -207,7 +209,7 @@ public class ApplicationConfig {
 		return resourceMap.containsKey(name);
 	}
 	
-	private void addResource(String name){
+	private void addResource(byte[] tmp,String name){
 		InputStream stream;
 		try {
 			stream = ResourceUtil.getResource(name);
@@ -215,14 +217,12 @@ public class ApplicationConfig {
 				throw new IOException("Can't find " + name);
 			}
 			int length = 0;
-			while(stream.read() >= 0){
-				length++;
+			int ch;
+			while((ch = stream.read()) >= 0){
+				tmp[length++] = (byte) ch;
 			}
 			byte[] buffer = new byte[length];
-			stream = ResourceUtil.getResource(name);
-			for(int i = 0; i < buffer.length; i++){
-				buffer[i] = (byte) stream.read();
-			}
+			System.arraycopy(tmp,0,buffer,0,length);
 			resourceMap.put(name, buffer);
 		} catch (IOException e) {
 			e.printStackTrace();
