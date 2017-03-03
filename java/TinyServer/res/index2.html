@@ -33,7 +33,7 @@ div{
 <script type="text/javascript">
 function GoTo(url){
     $.getJSON(url,{},function(result,status,xhr){
-        $("upload").attr("action",result.parent.substring(0,-2));
+        $("#upform").attr("action",result.parent.substring(0,result.parent.length - 3));
         $("#parent").attr("href","javascript:GoTo('" + result.parent + "')");
         $("#content tr:gt(0)").remove();
         var parent = result.parent.substring(0,result.parent.length-2);
@@ -83,7 +83,7 @@ $(document).ready(function(){
     <th>时间</th>
 </tr>
 </table>
-<form id="upload" method="post" enctype="multipart/form-data">
+<form id="upform" method="post" enctype="multipart/form-data">
     <input name="upload" type="file"/> <input type="submit" value="upload"/>
 </form>
 </body></html>

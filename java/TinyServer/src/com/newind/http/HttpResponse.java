@@ -107,6 +107,9 @@ public class HttpResponse {
 		});
 		String rootPath = root.getAbsolutePath();
 		String current = dir.getAbsolutePath().substring(rootPath.length()).replace('\\', '/');
+		if (current.length() > 0 && !current.startsWith("/")){
+			current = "/" + current; //fix current path.
+		}
 		String parent = current + "/..";
 		connection.sendTrunk(String.format("{\"parent\":\"%s\",\n",parent));
 		connection.sendTrunk("\"data\":[");
