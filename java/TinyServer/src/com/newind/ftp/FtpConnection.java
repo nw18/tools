@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -74,7 +75,33 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	public FtpConnection(byte[] buffer) {
 		this.buffer = buffer;
 	}
-	
+
+
+	private String readLine() throws IOException{
+		ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+		while (byteBuffer.limit() > 1) {
+			int ch = inputStream.read();
+			if (ch < 0){
+				throw new IOException("stream end.");
+			}
+			if(ch == '\r'){
+				byteBuffer.put((byte)ch);
+				if(inputStream.read() == '\n'){
+					byteBuffer.put((byte)'\n');
+					break;
+				}else{
+					throw new IOException("bad line end.");
+				}
+			}
+			byteBuffer.put((byte)ch);
+		}
+		if (byteBuffer.limit() <= 1){
+			throw new IOException("to long a line.");
+		}
+		byteBuffer.flip();
+		return new String(buffer,0,byteBuffer.limit(),config.getCodeType());
+	}
+
 	@Override
 	public void handle(Socket param) {
 		try {
@@ -83,17 +110,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			sendResponse(FtpResponse.OK_SERVER_READY);
 			while (true) {
 				try {
-					int len = inputStream.read(buffer, 0, buffer.length);
-					if (len <= 0) {
-						logger.info("connection closed.");
-						param.close();
-						break;
-					}
-					if(len >= buffer.length){
-						logger.info("receive too long command!!!");
-						break;
-					}
-					String cmdString = new String(buffer,0,len);
+					String cmdString = readLine();
 					FtpCommand ftpCmd = new FtpCommand();
 					logger.info(cmdString);
 					ftpCmd.parse(cmdString);
