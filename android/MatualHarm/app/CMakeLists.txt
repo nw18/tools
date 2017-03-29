@@ -10,6 +10,8 @@ cmake_minimum_required(VERSION 3.4.1)
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 include_directories(src/main/cpp/head)
+set(BOX2D_BUILD_STATIC 1)
+set(BOX2D_VERSION 1)
 add_subdirectory(src/main/cpp/head/Box2D)
 aux_source_directory(src/main/cpp/src DIR_SRCS)
 #set(CMAKE_EXE_LINKER_FLAGS "-lpthread -lrt")
@@ -21,7 +23,7 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             #src/main/cpp/native-lib.cpp
+             #src/main/cpp/src/native-lib.cpp
 
              # add my cpp code link to native-lib
              ${DIR_SRCS})
@@ -47,4 +49,5 @@ target_link_libraries( # Specifies the target library.
                        native-lib
                        # Links the target library to the log library
                        # included in the NDK.
-                       ${log-lib} )
+                       ${log-lib}
+                       Box2D)
