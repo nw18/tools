@@ -1,5 +1,6 @@
 package com.newind.core;
 
+import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -8,11 +9,14 @@ import android.view.SurfaceView;
  */
 
 public class SurfaceRender {
+    private boolean isSurfaceReady = false;
+    private boolean isSurfaceRending = true;
+    private SurfaceHolder mHolder;
+    private SurfaceHolder.Callback myCallback = new SurfaceHolder.Callback(){
 
-    SurfaceHolder.Callback myCallback = new SurfaceHolder.Callback(){
         @Override
         public void surfaceCreated(SurfaceHolder surfaceHolder) {
-
+            isSurfaceReady = true;
         }
 
         @Override
@@ -22,7 +26,7 @@ public class SurfaceRender {
 
         @Override
         public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-
+            isSurfaceReady = false;
         }
     };
 
@@ -30,18 +34,28 @@ public class SurfaceRender {
     {
         @Override
         public void run() {
-            while(true){
-                render();
+            while(isSurfaceRending){
+                Canvas canvas = null;
+                if (isSurfaceReady) {
+                    canvas = mHolder.lockCanvas();
+                }
+                if(canvas == null){
+                    try { Thread.sleep(100); }catch (Exception e){ }
+                    return;
+                }
+                render(canvas);
+                mHolder.unlockCanvasAndPost(canvas);
             }
         }
     };
 
-    protected void render(){
+    protected void render(Canvas canvas){
 
     }
 
     public void attach(SurfaceView surfaceView){
-        surfaceView.getHolder().addCallback(myCallback);
+        mHolder = surfaceView.getHolder();
+        mHolder.addCallback(myCallback);
     }
 
     public void setup(){
@@ -51,7 +65,7 @@ public class SurfaceRender {
 
     public void release(){
         try {
-            // TODO: 17-4-1 make the thread stop.
+            isSurfaceRending = false;
             myThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
