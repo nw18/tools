@@ -1,8 +1,10 @@
 package com.newind.core;
-
 import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Created by newind on 17-4-1.
@@ -12,36 +14,54 @@ public class SurfaceRender {
     private boolean isSurfaceReady = false;
     private boolean isSurfaceRending = true;
     private SurfaceHolder mHolder;
+    private int mFormat;
+    private int mWidth;
+    private int mHeight;
+    private IRend mRender;
+    private Thread mThread;
+    private WorldCoordinate worldCoordinate = new WorldCoordinate();
+
     private SurfaceHolder.Callback myCallback = new SurfaceHolder.Callback(){
 
         @Override
         public void surfaceCreated(SurfaceHolder surfaceHolder) {
-            isSurfaceReady = true;
+            synchronized (SurfaceRender.this) {
+                isSurfaceReady = true;
+            }
         }
 
         @Override
-        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            synchronized (SurfaceRender.this){
+                mFormat = format;
+                mWidth = width;
+                mHeight = height;
+                worldCoordinate.setRectReal(new RectF(0,0,width,height));
+            }
         }
 
         @Override
         public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-            isSurfaceReady = false;
+            synchronized (SurfaceRender.this) {
+                isSurfaceReady = false;
+            }
         }
     };
 
-    Thread myThread = new Thread()
+    private Runnable mRendRunnable = new Thread()
     {
         @Override
         public void run() {
             while(isSurfaceRending){
                 Canvas canvas = null;
-                if (isSurfaceReady) {
-                    canvas = mHolder.lockCanvas();
+                synchronized (SurfaceRender.this){
+                    if (isSurfaceReady) {
+                        canvas = mHolder.lockCanvas();
+                    }
                 }
                 if(canvas == null){
-                    try { Thread.sleep(100); }catch (Exception e){ }
-                    return;
+                    try { Thread.sleep(40); }catch (Exception e){ }
+                    continue;
                 }
                 render(canvas);
                 mHolder.unlockCanvasAndPost(canvas);
@@ -49,8 +69,14 @@ public class SurfaceRender {
         }
     };
 
-    protected void render(Canvas canvas){
+    public SurfaceRender(IRend render){
+        mRender = render;
+    }
 
+    protected void render(Canvas canvas){
+        if (mRender != null){
+            mRender.paint(this,canvas);
+        }
     }
 
     public void attach(SurfaceView surfaceView){
@@ -59,16 +85,38 @@ public class SurfaceRender {
     }
 
     public void setup(){
-        myThread.start();
-        myThread.setPriority(Thread.MAX_PRIORITY);
+        mThread = new Thread(mRendRunnable);
+        mThread.start();
+        mThread.setPriority(Thread.MAX_PRIORITY);
     }
 
     public void release(){
         try {
             isSurfaceRending = false;
-            myThread.join();
+            mThread.join();
+            mThread = null;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public WorldCoordinate getWorldCoordinate() {
+        return worldCoordinate;
+    }
+
+    public synchronized int getFormat(){
+        return mFormat;
+    }
+
+    public synchronized int getWidth(){
+        return mWidth;
+    }
+
+    public synchronized int getHeight(){
+        return mHeight;
+    }
+
+    public interface IRend{
+        void paint(SurfaceRender render,Canvas canvas);
     }
 }
