@@ -17,7 +17,7 @@ public class SurfaceRender {
     private int mFormat;
     private int mWidth;
     private int mHeight;
-    private IRend mRender;
+    private IRendObject mRender;
     private Thread mThread;
     private WorldCoordinate worldCoordinate = new WorldCoordinate();
 
@@ -69,7 +69,7 @@ public class SurfaceRender {
         }
     };
 
-    public SurfaceRender(IRend render){
+    public SurfaceRender(IRendObject render){
         mRender = render;
     }
 
@@ -114,9 +114,5 @@ public class SurfaceRender {
 
     public synchronized int getHeight(){
         return mHeight;
-    }
-
-    public interface IRend{
-        void paint(SurfaceRender render,Canvas canvas);
     }
 }

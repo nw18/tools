@@ -6,15 +6,18 @@
 #define MUTUALHARM_HARM_H_H
 
 #include "Box2D/Box2D.h"
+#include "Base/task.h"
 
 class HarmWorld {
 private:
     HarmWorld();
     b2World mWorld;
-
+    ITask *p_task_step_in;
+    void run();
 public:
     ~HarmWorld();
-    void setup();
+    int setup();
+    void release();
 };
 
 #endif //MUTUALHARM_HARM_H_H

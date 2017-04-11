@@ -13,6 +13,7 @@ include_directories(src/main/cpp/head)
 set(BOX2D_BUILD_STATIC 1)
 set(BOX2D_VERSION 1)
 add_subdirectory(src/main/cpp/head/Box2D)
+add_subdirectory(src/main/cpp/head/Base)
 aux_source_directory(src/main/cpp/src DIR_SRCS)
 #set(CMAKE_EXE_LINKER_FLAGS "-lpthread -lrt")
 
@@ -50,4 +51,5 @@ target_link_libraries( # Specifies the target library.
                        # Links the target library to the log library
                        # included in the NDK.
                        ${log-lib}
-                       Box2D)
+                       Box2D
+                       Base)

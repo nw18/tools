@@ -2,6 +2,8 @@ package com.newind.mutualharm;
 
 import android.graphics.Canvas;
 
+import com.newind.core.DevLog;
+import com.newind.core.IRendObject;
 import com.newind.core.SurfaceRender;
 
 /**
@@ -11,7 +13,7 @@ import com.newind.core.SurfaceRender;
 public class MainSurfaceRender extends SurfaceRender {
     private DevLog devLog = new DevLog(null);
 
-    public MainSurfaceRender(IRend render) {
+    public MainSurfaceRender(IRendObject render) {
         super(render);
     }
 
