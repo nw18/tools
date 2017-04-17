@@ -103,20 +103,20 @@ def load_mime():
     f.close()
 def w2l(path):
     return config["root_path"] + path
-def send_head(lpath,path,conn):
-    file_size = os.path.getsize(lpath)
+def send_head(path,conn):
+    file_size = os.path.getsize(w2l(path))
     pos = path.rfind(".")
     file_ext = ""
-    mime_name = "application/octet-stream"
+    mime_name = mime_map[file_ext]
     if pos > 0:
         file_ext = path[pos+1:].lower()
     if file_ext in mime_map:
         mime_name = mime_map[file_ext]
     conn.send(res_file_ok.format(file_size,mime_name))
     return file_size
-def send_file(lpath,path,conn):
-    file_size = send_head(lpath,path,conn)
-    f = open(lpath,"rb")
+def send_file(path,conn):
+    file_size = send_head(path,conn)
+    f = open(w2l(path),"rb")
     log.debug("sending file ({1}):{0}".format(path,file_size))
     sz_read = 0
     try:
@@ -131,7 +131,8 @@ def send_file(lpath,path,conn):
     finally:
         log.debug("send file({1}):{0}:".format(path,sz_read))
         f.close()
-def list_dir(lpath,path,conn):
+def list_dir(path,conn):
+    lpath = w2l(path)
     ppath = path
     pos = ppath.rfind("/")
     out_list = []
