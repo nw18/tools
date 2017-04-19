@@ -1,8 +1,6 @@
 import SocketServer
-import socket
 import HttpSession
 import threading
-import time
 from HttpConfig import  *
 
 load_sys_argv()
@@ -16,5 +14,5 @@ class HttpServer:
     def stopServer(self):
         def closeSelf(self):
             self.server_instance.shutdown()
-
+        #close may block the signal.
         threading._start_new_thread(closeSelf,(self,))

@@ -16,6 +16,18 @@ def load_mime():
         mime_map[fields[0]] = fields[1].strip(" \r\n")
     f.close()
 
+def init_code():
+    if sys.platform.startswith('win'):
+        page_code = "gb2312"
+    else:
+        page_code = "utf-8"
+    config["page_template"] = '<html>\
+    <head>\
+    <meta name="viewport" content="width=1024px, initial-scale=1" />\
+    <meta http-equiv="Content-Type" content="text/html; charset=' + page_code + '"/>\
+    <title>TinyServer</title>\
+    <style>a{{font-size:100%}}</style></head>\
+    <body><table><tr><td>{0}</td></tr></table></body></html>'
 
 def load_sys_argv():
     for arg in sys.argv[1:]:
@@ -35,7 +47,9 @@ def load_sys_argv():
         else:
             print("bad parameter:", arg)
             exit(-1)
+    init_code()
     load_mime()
+
 
 def w2l(path):
     return config["root"] + path
