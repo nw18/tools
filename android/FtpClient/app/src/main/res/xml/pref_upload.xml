@@ -1,0 +1,28 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- A 'parent' preference, which enables/disables child preferences (below)
+         when checked/unchecked. -->
+    <EditTextPreference
+        android:capitalize="words"
+        android:defaultValue="@string/pref_default_collect_root"
+        android:inputType="text"
+        android:key="@string/pref_key_collect_root"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_title_collect_root" />
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:summary="是否收入时间目录"
+        android:key="@string/pref_key_collect_in_time"
+        android:title="@string/pref_title_collect_in_time" />
+
+    <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
+    <SwitchPreference
+        android:defaultValue="true"
+        android:summary="是否收入IP地址目录"
+        android:key="@string/pref_key_collect_in_ip"
+        android:title="@string/pref_title_collect_in_time" />
+
+</PreferenceScreen>
