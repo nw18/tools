@@ -6,7 +6,7 @@ class HttpSession(SocketServer.StreamRequestHandler):
         SocketServer.StreamRequestHandler.setup(self)
 
     def handle(self):
-        http_proc(self)
+        http_procedure(self)
         print ("session close:", self.client_address)
 
     def send(self, value):

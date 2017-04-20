@@ -6,13 +6,15 @@ mime_map = {"": "application/octet-stream"}
 
 
 def load_mime():
+    global mime_map
     if not os.path.exists(config["mime"]):
         return
     f = open(config["mime"], "r")
     for line in f:
         fields = line.split(":")
         if len(fields) != 2 or fields[1] == "":
-            break
+            print ("skip:",line)
+            continue
         mime_map[fields[0]] = fields[1].strip(" \r\n")
     f.close()
 
@@ -28,6 +30,9 @@ def init_code():
     <title>TinyServer</title>\
     <style>a{{font-size:100%}}</style></head>\
     <body><table><tr><td>{0}</td></tr></table></body></html>'
+    for key in mime_map.keys():
+        if mime_map[key] == "text/plain":
+            mime_map[key] += ";charset=" + page_code
 
 def load_sys_argv():
     for arg in sys.argv[1:]:
@@ -47,8 +52,8 @@ def load_sys_argv():
         else:
             print("bad parameter:", arg)
             exit(-1)
-    init_code()
     load_mime()
+    init_code()
 
 
 def w2l(path):

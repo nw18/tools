@@ -103,7 +103,7 @@ def do_get(path, conn, heads, params):
         send_file(path, conn)
 
 
-def http_proc(conn):
+def http_procedure(conn):
     try:
         while True:
             head_lines = conn.recv()
@@ -139,7 +139,7 @@ def http_proc(conn):
             if head_properties["connection"] == "close" or ("force_short" in config and config["force_short"]):
                 break
     except Exception, e:
-        print ("http_proc Exception: ", e)
+        print ("http_procedure Exception: ", e)
     finally:
         conn.close()
 
