@@ -16,12 +16,20 @@ public class TaskManager {
     private static final int MSG_NEW = 0;
     private static final int MSG_DEL = 1;
     private static final int MSG_UPDATE = 2;
+    private static final int MSG_CLEAR = 3;
 
-    private static TaskManager _instance_;
+    private static TaskManager _instance_ = null;
     private DBManager dbManager;
     private List<DBManager.FileUploadInfo> uploadInfoList;
     private List<IListener> listenerList = new ArrayList<>();
     private int maxID = -1;
+
+    public static TaskManager getInstance() {
+        if (_instance_ == null) {
+            _instance_ = new TaskManager();
+        }
+        return _instance_;
+    }
 
     private TaskManager(){
         threadDispatcher.start();
@@ -63,19 +71,25 @@ public class TaskManager {
 
     private void onMessage(Message msg) {
         synchronized (listenerList) {
-            synchronized (msg.obj) {
-                for (IListener listener : listenerList) {
-                    switch (msg.what) {
-                        case MSG_NEW:
+            for (IListener listener : listenerList) {
+                switch (msg.what) {
+                    case MSG_NEW:
+                        synchronized (msg.obj) {
                             listener.onAdd((DBManager.FileUploadInfo) msg.obj);
-                            break;
-                        case MSG_DEL:
+                        }
+                        break;
+                    case MSG_DEL:
+                        synchronized (msg.obj) {
                             listener.onDelete((DBManager.FileUploadInfo) msg.obj);
-                            break;
-                        case MSG_UPDATE:
+                        }
+                        break;
+                    case MSG_UPDATE:
+                        synchronized (msg.obj) {
                             listener.onUpdate((DBManager.FileUploadInfo) msg.obj);
-                            break;
-                    }
+                        }
+                        break;
+                    case MSG_CLEAR:
+                        listener.onClear();
                 }
             }
         }
@@ -144,10 +158,17 @@ public class TaskManager {
         }
     }
 
+    public synchronized void clearAll() {
+        dbManager.getFileUploadDB().clearAll();
+        uploadInfoList.clear();
+        sendMessage(MSG_CLEAR,null);
+    }
+
     interface IListener {
         void onAdd(DBManager.FileUploadInfo info);
         void onDelete(DBManager.FileUploadInfo info);
         void onUpdate(DBManager.FileUploadInfo info);
+        void onClear();
     }
 
     public void addListener(IListener listener) {

@@ -32,4 +32,5 @@
 
     <string name="pref_key_collect_in_ip">collect_in_ip</string>
     <string name="pref_title_collect_in_ip">按IP地址收集</string>
+    <string name="menu_action_clear_all">清空</string>
 </resources>

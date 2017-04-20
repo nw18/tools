@@ -2,4 +2,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/menu_settings" android:title="@string/title_activity_settings" app:showAsAction="ifRoom" />
+    <item android:id="@+id/menu_clear_all" android:title="@string/menu_action_clear_all" app:showAsAction="ifRoom" />
 </menu>

@@ -35,6 +35,15 @@ public class DBManager {
         return mConnection.get();
     }
 
+
+    public static final String[] STAT_VALUES  = {
+            "等待","上传","完成","出错"
+    };
+
+    public static final int[] STAT_COLORS = {
+            0xFF000000,0xFF00FF00,0xFF00FF00,0xFFFF0000
+    };
+
     public static class FileUploadInfo {
         public static final int STAT_NEW = 0;
         public static final int STAT_UPLOADING = 1;
@@ -43,7 +52,7 @@ public class DBManager {
 
         public int id;
         public String file_path;
-        public float progress;
+        public float progress; // 0~1
         public int status;
     }
 
@@ -78,7 +87,7 @@ public class DBManager {
         public List<FileUploadInfo> fetchList(int fromID) {
             List<FileUploadInfo> list = new ArrayList<>();
             SQLiteDatabase sqLiteDatabase = getReadableDatabase();
-            Cursor cursor = sqLiteDatabase.rawQuery("select * from ? where id > ?" , new String[] {TABLE_NAME,String.valueOf(fromID)});
+            Cursor cursor = sqLiteDatabase.rawQuery("select * from " + TABLE_NAME + " where id > ?" , new String[] {String.valueOf(fromID)});
             while (cursor.moveToNext()) {
                 FileUploadInfo info = new FileUploadInfo();
                 info.id = cursor.getInt(0);
@@ -92,18 +101,23 @@ public class DBManager {
 
         public void addItem(String filePath) {
             SQLiteDatabase sqLiteDatabase = getWritableDatabase();
-            sqLiteDatabase.rawQuery("insert into ? (?,?,?)",new String[] {TABLE_NAME,filePath,"0",String.valueOf(FileUploadInfo.STAT_NEW) });
+            sqLiteDatabase.rawQuery("insert into " + TABLE_NAME + " (?,?,?)",new String[] {filePath,"0",String.valueOf(FileUploadInfo.STAT_NEW) });
         }
 
         public void updateItem(int id,float process,int state) {
             SQLiteDatabase sqLiteDatabase = getWritableDatabase();
-            sqLiteDatabase.rawQuery("update ? set process=? ,status=? where id=?",
-                    new String[] {TABLE_NAME,String.valueOf(process),String.valueOf(state),String.valueOf(id)});
+            sqLiteDatabase.rawQuery("update " + TABLE_NAME + " set process=? ,status=? where id=?",
+                    new String[] {String.valueOf(process),String.valueOf(state),String.valueOf(id)});
         }
 
         public void deleteItem(int id) {
             SQLiteDatabase sqLiteDatabase = getWritableDatabase();
             sqLiteDatabase.delete(TABLE_NAME,"id=" + id,null);
+        }
+
+        public void clearAll() {
+            SQLiteDatabase sqLiteDatabase = getWritableDatabase();
+            sqLiteDatabase.delete(TABLE_NAME,"id>=0",null);
         }
     }
 
