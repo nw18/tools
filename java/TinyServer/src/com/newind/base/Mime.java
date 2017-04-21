@@ -1,5 +1,8 @@
 package com.newind.base;
 
+import com.newind.ApplicationConfig;
+import com.newind.util.TextUtil;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +58,9 @@ public class Mime {
 		String reString = mimeMap.get(fileExt.toLowerCase());
 		if (reString == null) {
 			return "application/octet-stream";
+		}
+		if (TextUtil.equal("text/plain",reString)) {
+			reString  += ";charset=" + ApplicationConfig.instance().getCodeType() ; //let charset default to utf-8
 		}
 		return reString;
 	}
