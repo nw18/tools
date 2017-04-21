@@ -101,13 +101,13 @@ public class DBManager {
 
         public void addItem(String filePath) {
             SQLiteDatabase sqLiteDatabase = getWritableDatabase();
-            sqLiteDatabase.rawQuery("insert into " + TABLE_NAME + " (?,?,?)",new String[] {filePath,"0",String.valueOf(FileUploadInfo.STAT_NEW) });
+            sqLiteDatabase.execSQL("insert into " + TABLE_NAME + " (file_path,progress,status) values (?, ? ,?)",new Object[] {filePath,"0",String.valueOf(FileUploadInfo.STAT_NEW) });
         }
 
         public void updateItem(int id,float process,int state) {
             SQLiteDatabase sqLiteDatabase = getWritableDatabase();
-            sqLiteDatabase.rawQuery("update " + TABLE_NAME + " set process=? ,status=? where id=?",
-                    new String[] {String.valueOf(process),String.valueOf(state),String.valueOf(id)});
+            sqLiteDatabase.execSQL("update " + TABLE_NAME + " set progress=? ,status=? where id=?",
+                    new Object[] {String.valueOf(process),String.valueOf(state),String.valueOf(id)});
         }
 
         public void deleteItem(int id) {

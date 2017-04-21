@@ -2,8 +2,10 @@ package com.newind.ftpclient;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,6 +24,7 @@ public class MainActivity extends AppCompatActivity implements TaskManager.IList
     ListView listView;
     TaskManager taskManager;
     List<DBManager.FileUploadInfo> fileUploadInfoList = new ArrayList<>();
+    private String mExternalPath;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -49,7 +52,15 @@ public class MainActivity extends AppCompatActivity implements TaskManager.IList
         taskManager = TaskManager.getInstance();
         taskManager.getAll(fileUploadInfoList);
         listView.setAdapter(mAdapter);
+        mExternalPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        taskManager.addListener(this);
         onNewIntent(getIntent());
+    }
+
+    @Override
+    protected void onDestroy() {
+        taskManager.rmvListener(this);
+        super.onDestroy();
     }
 
     @Override
@@ -75,6 +86,9 @@ public class MainActivity extends AppCompatActivity implements TaskManager.IList
 
     private void addFileFromUri(Uri uri) {
         String filePath = MainApplication.getInstance().getFilePathFromContentUri(uri);
+        if (TextUtils.isEmpty(filePath)) {
+            return;
+        }
         Log.e("XXX","addFileFromUri " + filePath);
         taskManager.addItem(filePath);
     }
@@ -115,8 +129,13 @@ public class MainActivity extends AppCompatActivity implements TaskManager.IList
             }else {
                 holder = (UploadItemHolder) view.getTag();
             }
+            holder.position = position;
             DBManager.FileUploadInfo info = fileUploadInfoList.get(position);
-            holder.tv_file_path.setText(info.file_path);
+            if (info.file_path.startsWith(mExternalPath)) {
+                holder.tv_file_path.setText(info.file_path.substring(mExternalPath.length()));
+            }else {
+                holder.tv_file_path.setText(info.file_path);
+            }
             holder.pb_process.setProgress((int) (info.progress * holder.pb_process.getMax()));
             holder.tv_status.setText(DBManager.STAT_VALUES[info.status]);
             if (info.status == DBManager.FileUploadInfo.STAT_UPLOADING) {
@@ -130,21 +149,44 @@ public class MainActivity extends AppCompatActivity implements TaskManager.IList
 
     @Override
     public void onAdd(DBManager.FileUploadInfo info) {
-
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                taskManager.getAll(fileUploadInfoList);
+                mAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     @Override
     public void onDelete(DBManager.FileUploadInfo info) {
-
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                taskManager.getAll(fileUploadInfoList);
+                mAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     @Override
     public void onUpdate(DBManager.FileUploadInfo info) {
-
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     @Override
     public void onClear() {
-
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                fileUploadInfoList.clear();
+                mAdapter.notifyDataSetChanged();
+            }
+        });
     }
 }
