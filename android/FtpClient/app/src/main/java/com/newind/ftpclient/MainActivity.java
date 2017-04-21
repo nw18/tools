@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements TaskManager.IList
             holder.pb_process.setProgress((int) (info.progress * holder.pb_process.getMax()));
             holder.tv_status.setText(DBManager.STAT_VALUES[info.status]);
             if (info.status == DBManager.FileUploadInfo.STAT_UPLOADING) {
-                holder.tv_status.setTextColor(DBManager.STAT_COLORS[DBManager.FileUploadInfo.STAT_FINISHED] | ((int)(255 * 1-info.progress) << 16));
+                holder.tv_status.setTextColor(DBManager.STAT_COLORS[DBManager.FileUploadInfo.STAT_FINISHED] | ((int)(255 * (1 - info.progress)) << 16));
             }else {
                 holder.tv_status.setTextColor(DBManager.STAT_COLORS[info.status]);
             }

@@ -22,17 +22,14 @@ public class DBManager {
         return _manager_;
     }
 
-    private SoftReference<FileUploadDataBase> mConnection;
+    private FileUploadDataBase mConnection;
 
     private DBManager(Context context){
-        mConnection = new SoftReference<>(new FileUploadDataBase(context));
-        if (mConnection.get() == null) {
-            mConnection = new SoftReference<>(new FileUploadDataBase(context));
-        }
+        mConnection = new FileUploadDataBase(context);
     }
 
     public FileUploadDataBase getFileUploadDB() {
-        return mConnection.get();
+        return mConnection;
     }
 
 

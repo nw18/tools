@@ -41,4 +41,11 @@
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:title="@string/pref_title_pass_word" />
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:summaryOff="使用主动模式"
+        android:summaryOn="使用被动模式"
+        android:key="@string/pref_key_pasv_mode"
+        android:title="@string/pref_title_pasv_mode" />
 </PreferenceScreen>

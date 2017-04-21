@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">FTP客户端</string>
+    <string name="app_name">LOG-FTP</string>
     <string name="title_activity_settings">设置</string>
 
     <!-- Strings related to Settings -->
 
     <!-- Example General settings -->
-    <string name="pref_header_general">账户设置</string>
+    <string name="pref_header_general">FTP设置</string>
 
     <string name="pref_title_address">FTP地址</string>
     <string name="pref_key_address">address</string>
@@ -23,6 +23,8 @@
     <string name="pref_key_pass_word">pass_word</string>
     <string name="pref_default_pass_word">123456</string>
 
+    <string name="pref_key_pasv_mode">pasv_mode</string>
+    <string name="pref_title_pasv_mode">数据传输模式</string>
 
     <!-- Example settings for Notifications -->
     <string name="pref_header_upload">上传选项</string>

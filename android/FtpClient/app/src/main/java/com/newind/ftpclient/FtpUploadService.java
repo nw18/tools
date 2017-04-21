@@ -153,6 +153,7 @@ public class FtpUploadService extends IntentService implements Runnable {
         String rootDir = preference.getString(getString(R.string.pref_key_collect_root),"");
         boolean is_in_time = preference.getBoolean(getString(R.string.pref_key_collect_in_time),true);
         boolean is_in_ip = preference.getBoolean(getString(R.string.pref_key_collect_in_ip),true);
+        boolean is_pasv_mode = preference.getBoolean(getString(R.string.pref_key_pasv_mode),true);
         boolean is_store_okay = false;
         long read_sum = 0;
         long file_length = localFile.length();
@@ -162,6 +163,17 @@ public class FtpUploadService extends IntentService implements Runnable {
                 if (!ftpClient.isConnected()) {
                     Log.e("XXX", "ftp connect fail.");
                     break;
+                }
+                if(!ftpClient.setFileType(FTP.BINARY_FILE_TYPE)){
+                    Log.e("XXX","setFileType(FTP.BINARY_FILE_TYPE) fail.");
+                }
+                if(!ftpClient.setFileTransferMode(FTP.STREAM_TRANSFER_MODE)) {
+                    Log.e("XXX","setFileTransferMode(FTP.STREAM_TRANSFER_MODE) fail.");
+                }
+                if (is_pasv_mode) {
+                    ftpClient.enterLocalPassiveMode();
+                }else {
+                    ftpClient.enterLocalActiveMode();
                 }
                 if(!ftpClient.login(userName,passWord)) {
                     Log.e("XXX", "ftp connect login.");
@@ -196,14 +208,6 @@ public class FtpUploadService extends IntentService implements Runnable {
                         break;
                     }
                 }
-                if(!ftpClient.setFileType(FTP.BINARY_FILE_TYPE)){
-                    Log.e("XXX","setFileType(FTP.BINARY_FILE_TYPE) fail.");
-                }
-                if(!ftpClient.setFileTransferMode(FTP.STREAM_TRANSFER_MODE)) {
-                    Log.e("XXX","setFileTransferMode(FTP.STREAM_TRANSFER_MODE) fail.");
-                }
-                //使用的PASV模式?
-                ftpClient.enterLocalActiveMode();
                 OutputStream target = ftpClient.storeFileStream(localFile.getName());
                 int read = 0;
                 byte[] buffer = new byte[4 * 1024];
