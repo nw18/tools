@@ -2,6 +2,7 @@ package com.newind.ftpclient;
 
 import android.app.Application;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -17,6 +18,9 @@ public class MainApplication extends Application {
     public void onCreate() {
         super.onCreate();
         instance = this;
+        Intent it = new Intent(this,FtpUploadService.class);
+        it.setAction(FtpUploadService.ACTION_SETUP);
+        startService(it);
     }
 
     public static MainApplication getInstance() {

@@ -11,6 +11,10 @@
     <string name="pref_key_address">address</string>
     <string name="pref_default_address">192.168.10.2</string>
 
+    <string name="pref_title_port">FTP端口</string>
+    <string name="pref_key_port">port</string>
+    <string name="pref_default_port">21</string>
+
     <string name="pref_title_user_name">FTP用户名</string>
     <string name="pref_key_user_name">user_name</string>
     <string name="pref_default_user_name">uftp</string>

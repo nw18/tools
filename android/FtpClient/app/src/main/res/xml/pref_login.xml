@@ -14,6 +14,16 @@
 
     <EditTextPreference
         android:capitalize="words"
+        android:defaultValue="@string/pref_default_port"
+        android:inputType="number"
+        android:key="@string/pref_key_port"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_title_port" />
+
+    <EditTextPreference
+        android:capitalize="words"
         android:defaultValue="@string/pref_default_user_name"
         android:inputType="number|text"
         android:key="@string/pref_key_user_name"

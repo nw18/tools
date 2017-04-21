@@ -148,23 +148,31 @@ public class MainActivity extends AppCompatActivity implements TaskManager.IList
     };
 
     @Override
-    public void onAdd(DBManager.FileUploadInfo info) {
+    public void onAdd(final DBManager.FileUploadInfo info) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 taskManager.getAll(fileUploadInfoList);
                 mAdapter.notifyDataSetChanged();
+                Intent it = new Intent(MainActivity.this,FtpUploadService.class);
+                it.setAction(FtpUploadService.ACTION_ADD);
+                it.putExtra(FtpUploadService.EXTRA_ID,String.valueOf(info.id));
+                startService(it);
             }
         });
     }
 
     @Override
-    public void onDelete(DBManager.FileUploadInfo info) {
+    public void onDelete(final DBManager.FileUploadInfo info) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 taskManager.getAll(fileUploadInfoList);
                 mAdapter.notifyDataSetChanged();
+                Intent it = new Intent(MainActivity.this,FtpUploadService.class);
+                it.setAction(FtpUploadService.ACTION_DELETE);
+                it.putExtra(FtpUploadService.EXTRA_ID,String.valueOf(info.id));
+                startService(it);
             }
         });
     }
@@ -184,8 +192,11 @@ public class MainActivity extends AppCompatActivity implements TaskManager.IList
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                fileUploadInfoList.clear();
+                taskManager.getAll(fileUploadInfoList);
                 mAdapter.notifyDataSetChanged();
+                Intent it = new Intent(MainActivity.this,FtpUploadService.class);
+                it.setAction(FtpUploadService.ACTION_CLEAR);
+                startService(it);
             }
         });
     }

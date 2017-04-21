@@ -31,7 +31,7 @@ public class TaskManager {
         return _instance_;
     }
 
-    private TaskManager(){
+    private TaskManager() {
         threadDispatcher.start();
         dbManager = DBManager.instance(MainApplication.getInstance());
         uploadInfoList = dbManager.getFileUploadDB().fetchList(-1);
@@ -97,7 +97,7 @@ public class TaskManager {
 
     private void sendMessage(int what, Object object) {
         if (mHandler == null) {
-            Log.e("XXX","handler not init now.");
+            Log.e("XXX", "handler not init now.");
         }
         Message msg = mHandler.obtainMessage();
         msg.what = what;
@@ -112,7 +112,7 @@ public class TaskManager {
         return _instance_;
     }
 
-    private DBManager.FileUploadInfo findByID(int id) {
+    public DBManager.FileUploadInfo findByID(int id) {
         for (DBManager.FileUploadInfo info : uploadInfoList) {
             if (info.id == id) {
                 return info;
@@ -128,7 +128,7 @@ public class TaskManager {
             DBManager.FileUploadInfo info = list.get(list.size() - 1);
             uploadInfoList.add(info);
             maxID = info.id;
-            sendMessage(MSG_NEW,info);
+            sendMessage(MSG_NEW, info);
         }
     }
 
@@ -137,7 +137,7 @@ public class TaskManager {
         if (info != null) {
             dbManager.getFileUploadDB().deleteItem(id);
             uploadInfoList.remove(info);
-            sendMessage(MSG_DEL,info);
+            sendMessage(MSG_DEL, info);
         }
     }
 
@@ -146,28 +146,31 @@ public class TaskManager {
         list.addAll(uploadInfoList);
     }
 
-    public synchronized void updateItem(int id,float process,int status) {
+    public synchronized void updateItem(int id, float process, int status) {
         DBManager.FileUploadInfo info = findByID(id);
         if (info != null) {
-            dbManager.getFileUploadDB().updateItem(id,process,status);
+            dbManager.getFileUploadDB().updateItem(id, process, status);
             synchronized (info) {
                 info.progress = process;
                 info.status = status;
             }
-            sendMessage(MSG_UPDATE,info);
+            sendMessage(MSG_UPDATE, info);
         }
     }
 
     public synchronized void clearAll() {
         dbManager.getFileUploadDB().clearAll();
         uploadInfoList.clear();
-        sendMessage(MSG_CLEAR,null);
+        sendMessage(MSG_CLEAR, null);
     }
 
     interface IListener {
         void onAdd(DBManager.FileUploadInfo info);
+
         void onDelete(DBManager.FileUploadInfo info);
+
         void onUpdate(DBManager.FileUploadInfo info);
+
         void onClear();
     }
 
