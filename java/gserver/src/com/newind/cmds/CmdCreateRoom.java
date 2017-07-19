@@ -1,13 +1,13 @@
 package com.newind.cmds;
 
-import com.newind.cmds.beans.RoomInfo;
+import com.newind.beans.RoomInfo;
 
 /**
  * Created by newind on 17-7-18.
  */
-public class CreateRoom extends CmdBase {
+public class CmdCreateRoom extends CmdBase {
     private RoomInfo roomInfo = new RoomInfo();
-    public CreateRoom() {
+    public CmdCreateRoom() {
 
     }
 
