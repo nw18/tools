@@ -17,13 +17,15 @@ public class FrameInit extends Frame{
     public static final int WIDTH = 1600;
     public static final int HEIGHT = 900;
     public FrameInit() {
-        Stage stage;
-        //make room stage.
-        //stage = new Stage(new FitViewport(WIDTH,HEIGHT));
+        makeInit();
+        makeCreateRoom();
+        makeJoinRoom();
+        makeSelfConfig();
+    }
 
-        //init stage
-        stage = new Stage(new FitViewport(WIDTH,HEIGHT));
-        for (String name : new String[] {"join_room.png" , "make_room.png"}) {
+    private void makeInit() {
+        Stage stage = new Stage(new FitViewport(WIDTH,HEIGHT));
+        for (String name : new String[] {"self_config.png", "join_room.png" , "make_room.png"}) {
             Button button = makeButton(name);
             button.setName(name.split(".png")[0]);
             stage.addActor(button);
@@ -33,6 +35,19 @@ public class FrameInit extends Frame{
         pushStage("init",stage);
     }
 
+    private void makeCreateRoom() {
+        Stage stage = new Stage(new FitViewport(WIDTH,HEIGHT));
+
+    }
+
+    private void  makeJoinRoom() {
+
+    }
+
+    private void makeSelfConfig() {
+
+    }
+
     private EventListener initListener = new EventListener() {
         @Override
         public boolean handle(Event event) {
@@ -40,12 +55,7 @@ public class FrameInit extends Frame{
                 InputEvent inputEvent = (InputEvent) event;
                 if (inputEvent.getType() == InputEvent.Type.enter) {
                     String s = event.getTarget().getName();
-                    if (s.equals("make_room")) {
-                        
-                    }else if (s.equals("enter_room")) {
-
-                    }
-                    return true;
+                    return showStage(s);
                 }
             }
             return false;

@@ -1,0 +1,42 @@
+时间同步
+{
+	long timeOffset;
+}
+
+send >> currentTick
+recv << lastTick + serverTick
+init:
+	timeOffset = serverTick - lastTick + (currentTick-lastTick)/20
+else:
+	timeOffset = 0.8 * timeOffset + 0.2 * this-timeOffset;
+
+角色
+{
+	x,y,
+	size: 1M,
+	bleed,
+	time
+}
+
+移动场景：
+move left
+move right
+[jump]
+攻击场景：
+
+场地：
+100M
+武器
+步枪：
+{
+	speed:60m/s
+	hurt: 50%~0%;
+	cool_time:2s;
+}
+火炮：
+{
+	speed:10m/s
+	hurt：1000% ~ 0%;
+	cool_time: 20s;
+}
+
