@@ -2,11 +2,15 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 
@@ -124,6 +128,23 @@ public class Frame implements Screen {
         style.up = new TextureRegionDrawable(new TextureRegion(texMakeRoom,0,0,buttonWidth,buttonHeight));
         style.down = new TextureRegionDrawable(new TextureRegion(texMakeRoom,0,buttonHeight,buttonWidth,buttonHeight));
         return new Button(style);
+    }
+
+    public static TextField makeTextField(int width,int height) {
+
+    }
+
+    public static Label makeLabel(String text){
+
+    }
+
+    public static Texture makeRectBorder(int width, int height, Color color) {
+        Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
+        pixmap.setColor(color.r,color.g,color.b,color.a);
+        pixmap.drawRectangle(0, 0, pixmap.getWidth(), pixmap.getHeight());
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     public static class Layout {
