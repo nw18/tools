@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="RatioSize">
+        <attr name="rsScaleRatio" format="float" />
+        <attr name="rsFixWidth" format="boolean" />
+    </declare-styleable>
+
+</resources>

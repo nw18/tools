@@ -131,7 +131,8 @@ public class Frame implements Screen {
     }
 
     public static TextField makeTextField(int width,int height) {
-
+        TextField textField = new TextField();
+        return textField;
     }
 
     public static Label makeLabel(String text){

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.newind.mycamera2.MainActivity">
+
+    <com.newind.mycamera2.RatioSizeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:rsFixWidth="true"
+        app:rsScaleRatio="0.75">
+
+        <TextureView
+            android:id="@+id/texCamera"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </com.newind.mycamera2.RatioSizeLayout>
+
+    <TextView
+        android:id="@+id/tvResult"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <Button
+        android:id="@+id/btGetIt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get It!!!"/>
+</LinearLayout>
