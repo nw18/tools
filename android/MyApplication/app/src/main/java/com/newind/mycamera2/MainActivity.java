@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -12,6 +11,7 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
@@ -20,6 +20,10 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.Type;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -36,7 +40,10 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     public static abstract class ParamRunnable<T> implements Runnable{
@@ -48,12 +55,13 @@ public class MainActivity extends AppCompatActivity {
 
     private HandlerThread mDataProcessor,mDataProcessor2;
     private Handler mDataHandler,mDataHandler2;
-    private TextureView texCamera;
+    private TextureView texCamera,texPreview;
     private TextView tvResult;
     private Runnable toClose;
     private ImageReader mImageReader;
     private BallManager ballManager = new BallManager();
     private ClipboardManager clipboardManager;
+    private RSCapture mRSCapture;
 
     // Used to load the 'native-lib' library on application startup.
     static {
@@ -65,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         texCamera = (TextureView) findViewById(R.id.texCamera);
+        texPreview = (TextureView) findViewById(R.id.texPreview);
         tvResult = (TextView) findViewById(R.id.tvResult);
         findViewById(R.id.btGetIt).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,15 +88,19 @@ public class MainActivity extends AppCompatActivity {
         mDataProcessor2.start();
         mDataHandler = new Handler(mDataProcessor.getLooper());
         mDataHandler2 = new Handler(mDataProcessor2.getLooper());
-        texCamera.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+        TextureView.SurfaceTextureListener listener = new TextureView.SurfaceTextureListener() {
+            int count = 0;
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                mDataHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        InitCamera();
-                    }
-                });
+                count++;
+                if (count == 2) {
+                    mDataHandler.post(new ParamRunnable<SurfaceTexture>(surface) {
+                        @Override
+                        public void run() {
+                            InitCamera(target);
+                        }
+                    });
+                }
             }
 
             @Override
@@ -104,15 +117,18 @@ public class MainActivity extends AppCompatActivity {
             public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
             }
-        });
+        };
 
-        clipboardManager = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+        clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         clipboardManager.addPrimaryClipChangedListener(new ClipboardManager.OnPrimaryClipChangedListener() {
             @Override
             public void onPrimaryClipChanged() {
                 Toast.makeText(MainActivity.this, "copped", Toast.LENGTH_SHORT).show();
+                clipboardManager.removePrimaryClipChangedListener(this);
             }
         });
+        texCamera.setSurfaceTextureListener(listener);
+        texPreview.setSurfaceTextureListener(listener);
     }
 
     @Override
@@ -152,10 +168,10 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1001 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            mDataHandler.post(new Runnable() {
+            mDataHandler.post(new ParamRunnable<SurfaceTexture>(texCamera.getSurfaceTexture()) {
                 @Override
                 public void run() {
-                    InitCamera();
+                    InitCamera(target);
                 }
             });
         } else {
@@ -173,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             try {
+                MyDebug.e(String.format("frame size %d %d",img.getWidth(),img.getHeight()));
                 if (null == digest) {
                     digest = MessageDigest.getInstance("MD5");
                 }
@@ -194,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void InitCamera() {
+    private void InitCamera(SurfaceTexture surfaceTexture) {
         MyDebug.invoked();
         CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
         try {
@@ -204,11 +221,21 @@ public class MainActivity extends AppCompatActivity {
             //在这里可以通过CameraCharacteristics设置相机的功能,当然必须检查是否支持
             characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            Size largest = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.YUV_420_888)), new CompareSizesByArea());
-            Size middle = new Size(320,240);
-            mImageReader = ImageReader.newInstance(middle.getWidth(),middle.getHeight(),ImageFormat.YUV_420_888,4);
+            List<Size> sizeList = Arrays.asList(map.getOutputSizes(ImageFormat.JPEG));
+            for (Size size : sizeList) {
+                MyDebug.i(String.format("support size:%d %d",size.getWidth(),size.getHeight()));
+            }
+            Size largest = Collections.max(sizeList, new CompareSizesByRate(4.0/3,4000*3000));
+            SurfaceTexture texture = texCamera.getSurfaceTexture();
+            sizeList = Arrays.asList(map.getOutputSizes(ImageFormat.YUV_420_888));
+            Size middle = Collections.max(sizeList, new CompareSizesByRate(4.0/3,1200*1600));
+            texture.setDefaultBufferSize(middle.getHeight(),middle.getWidth());
+            mImageReader = ImageReader.newInstance(middle.getHeight(),middle.getWidth(),ImageFormat.YUV_420_888,4);
             mImageReader.setOnImageAvailableListener(mOnImageAvailableListener,mDataHandler2);
-            texCamera.getSurfaceTexture().setDefaultBufferSize(largest.getHeight(),largest.getWidth());
+            mRSCapture = new RSCapture(this,middle);
+            MyDebug.e(String.format("selected size midle %d %d large %d %d preview %d %d",
+                    middle.getWidth(),middle.getHeight(),largest.getWidth(),largest.getHeight(),
+                    texCamera.getWidth(),texCamera.getHeight()));
             //就像这样
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 1001);
@@ -245,29 +272,25 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         SurfaceTexture texture = mPreviewView.getSurfaceTexture();
-        texture.setDefaultBufferSize(mPreviewView.getWidth(), mPreviewView.getHeight());
         Surface surface = new Surface(texture);
+        Surface surfacePreview = new Surface(texPreview.getSurfaceTexture());
         try {
-            final CaptureRequest.Builder captureBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
 
-            // Required for RAW capture
-//            captureBuilder.set(CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE, CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE_ON);
-//            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+//            final CaptureRequest.Builder captureBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
 //            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-//            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, (long) ((214735991 - 13231) / 2));
-//            captureBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 0);
-//            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, (10000 - 100) / 2);//设置 ISO，感光度
-//            //设置每秒30帧
-//            CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-//            CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(camera.getId());
-//            Range<Integer> fps[] = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
-//            captureBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fps[fps.length - 1]);
-            //captureBuilder.set(CaptureRequest.IZ);
+            final CaptureRequest.Builder captureBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+            mRSCapture.bindOutput(surface,mPreviewView.getWidth(),mPreviewView.getHeight());
+            surface = mRSCapture.getInputSurface();
             captureBuilder.addTarget(surface);
-            captureBuilder.addTarget(mImageReader.getSurface());
-            camera.createCaptureSession(Arrays.asList(surface,mImageReader.getSurface()), new CameraCaptureSession.StateCallback() {
+            //captureBuilder.addTarget(mImageReader.getSurface());
+            captureBuilder.addTarget(surfacePreview);
+            camera.createCaptureSession(Arrays.asList(surface,mImageReader.getSurface(),surfacePreview), new CameraCaptureSession.StateCallback() {
+            //camera.createCaptureSession(Arrays.asList(mImageReader.getSurface()), new CameraCaptureSession.StateCallback() {
+            //captureBuilder.addTarget(mAllocInput.getSurface());
+            //camera.createCaptureSession(Arrays.asList(surface, mAllocInput.getSurface()), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession session) {
                     MyDebug.invoked();
@@ -294,7 +317,6 @@ public class MainActivity extends AppCompatActivity {
             public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request,
                                            TotalCaptureResult result) {
                 MyDebug.invoked();
-
             }
 
             @Override
