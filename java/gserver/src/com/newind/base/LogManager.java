@@ -35,8 +35,4 @@ public class LogManager {
 	public static Logger getLogger() {
 		return Logger.getLogger("default");
 	}
-	
-	public static void disableLogFile(){
-		LOG_FILE_PATH = "";
-	}
 }

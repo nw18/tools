@@ -1,7 +1,11 @@
 package com.newind.gser;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.newind.base.LogManager;
 import com.newind.base.Pooling;
 import com.newind.base.PoolingWorker;
+import com.newind.cmds.CmdBase;
 
 import java.net.DatagramPacket;
 
@@ -12,7 +16,15 @@ public class CommandCenter extends Pooling<DatagramPacket,PoolingWorker<Datagram
     private class CommandHandler implements PoolingWorker<DatagramPacket>{
         @Override
         public void handle(DatagramPacket param) {
-
+            try {
+                JSONObject jsonObject = JSONObject.parseObject(new String(param.getData()));
+                CmdBase cmd = CmdBase.createFromJSON(jsonObject);
+                CommandDefine.Execute(cmd);
+            } catch (ClassNotFoundException e) {
+                LogManager.getLogger().info("parse command error: " + e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
