@@ -30,6 +30,12 @@
         <activity android:name=".activitys.ActivityConfig" android:screenOrientation="landscape">
 
         </activity>
+        <activity android:name=".activitys.ActivityCreateRoom" android:screenOrientation="landscape">
+
+        </activity>
+        <activity android:name=".activitys.ActivityJoinRoom" android:screenOrientation="landscape">
+
+        </activity>
     </application>
 
 </manifest>

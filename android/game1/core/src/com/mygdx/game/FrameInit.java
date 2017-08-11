@@ -38,7 +38,7 @@ public class FrameInit extends Frame{
         public boolean handle(Event event) {
             if(InputEvent.class.isInstance(event)) {
                 InputEvent inputEvent = (InputEvent) event;
-                if (inputEvent.getType() == InputEvent.Type.enter) {
+                if (inputEvent.getType() == InputEvent.Type.touchUp) {
                     String s = event.getTarget().getName();
                     switch (s){
                         case "self_config":
@@ -47,6 +47,8 @@ public class FrameInit extends Frame{
                             CommandBus.getInstance().dispatchAny(s);
                             break;
                     }
+                }else if (inputEvent.getType() == InputEvent.Type.touchDown) {
+                    return true;
                 }
             }
             return false;
