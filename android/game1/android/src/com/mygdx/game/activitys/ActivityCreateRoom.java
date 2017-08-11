@@ -10,10 +10,13 @@ import com.mygdx.game.R;
  * Created by newind on 17-8-11.
  */
 
-public class ActivityCreateRoom extends Activity {
+public class ActivityCreateRoom extends Wrapper {
+    public ActivityCreateRoom() {
+        super(R.layout.activity_create_room);
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_create_room);
+    protected void onCreateFinish(Bundle savedInstanceState) {
+
     }
 }

@@ -1,9 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/root"
+    android:padding="15dp"
     tools:context="com.mygdx.game.activitys.ActivityConfig">
+    <EditText
+        android:id="@+id/et_name"
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="昵称"
+        android:inputType="text"/>
 
-</FrameLayout>
+    <Switch
+        android:id="@+id/sw_sex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:showText="true"
+        android:textColor="#ffff00"
+        android:textOff="女"
+        android:textOn="男"
+        tools:text="性别:" />
+
+
+</LinearLayout>

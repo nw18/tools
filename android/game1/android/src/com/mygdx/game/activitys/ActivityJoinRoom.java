@@ -9,10 +9,14 @@ import com.mygdx.game.R;
  * Created by newind on 17-8-11.
  */
 
-public class ActivityJoinRoom extends Activity {
+public class ActivityJoinRoom extends Wrapper {
+
+    public ActivityJoinRoom() {
+        super(R.layout.activity_join_room);
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_join_room);
+    protected void onCreateFinish(Bundle savedInstanceState) {
+
     }
 }
