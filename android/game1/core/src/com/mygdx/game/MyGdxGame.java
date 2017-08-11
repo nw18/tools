@@ -4,9 +4,16 @@ import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.mygdx.game.events.ICommander;
 
 public class MyGdxGame extends ApplicationAdapter {
-	FrameInit frameInit;
+	private static MyGdxGame theGame = null;
+	private ICommander commander;
+	private FrameInit frameInit;
+
+	public MyGdxGame() {
+		theGame = this;
+	}
 
 	@Override
 	public void resize(int width, int height) {
@@ -29,5 +36,9 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void dispose () {
 		frameInit.dispose();
+	}
+
+	public static MyGdxGame getInstance() {
+		return theGame;
 	}
 }

@@ -25,8 +25,6 @@ public class CommandDefine {
 
             }
         });
-
-
     }
 
     public static <T extends CmdBase> void Execute(T command) {

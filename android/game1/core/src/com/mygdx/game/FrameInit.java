@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.mygdx.game.events.CommandBus;
 
 /**
  * Created by newind on 17-7-21.
@@ -18,9 +19,6 @@ public class FrameInit extends Frame{
     public static final int HEIGHT = 900;
     public FrameInit() {
         makeInit();
-        makeCreateRoom();
-        makeJoinRoom();
-        makeSelfConfig();
     }
 
     private void makeInit() {
@@ -35,19 +33,6 @@ public class FrameInit extends Frame{
         pushStage("init",stage);
     }
 
-    private void makeCreateRoom() {
-        Stage stage = new Stage(new FitViewport(WIDTH,HEIGHT));
-
-    }
-
-    private void  makeJoinRoom() {
-
-    }
-
-    private void makeSelfConfig() {
-
-    }
-
     private EventListener initListener = new EventListener() {
         @Override
         public boolean handle(Event event) {
@@ -55,7 +40,13 @@ public class FrameInit extends Frame{
                 InputEvent inputEvent = (InputEvent) event;
                 if (inputEvent.getType() == InputEvent.Type.enter) {
                     String s = event.getTarget().getName();
-                    return showStage(s);
+                    switch (s){
+                        case "self_config":
+                        case "join_room":
+                        case "make_room":
+                            CommandBus.getInstance().dispatchAny(s);
+                            break;
+                    }
                 }
             }
             return false;

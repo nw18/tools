@@ -117,8 +117,6 @@ public class Frame implements Screen {
         return false;
     }
 
-
-
     ///// 创建一个按钮
     public static Button makeButton(String fileName) {
         Button.ButtonStyle style = new Button.ButtonStyle();
@@ -128,24 +126,6 @@ public class Frame implements Screen {
         style.up = new TextureRegionDrawable(new TextureRegion(texMakeRoom,0,0,buttonWidth,buttonHeight));
         style.down = new TextureRegionDrawable(new TextureRegion(texMakeRoom,0,buttonHeight,buttonWidth,buttonHeight));
         return new Button(style);
-    }
-
-    public static TextField makeTextField(int width,int height) {
-        TextField textField = new TextField();
-        return textField;
-    }
-
-    public static Label makeLabel(String text){
-
-    }
-
-    public static Texture makeRectBorder(int width, int height, Color color) {
-        Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
-        pixmap.setColor(color.r,color.g,color.b,color.a);
-        pixmap.drawRectangle(0, 0, pixmap.getWidth(), pixmap.getHeight());
-        Texture texture = new Texture(pixmap);
-        pixmap.dispose();
-        return texture;
     }
 
     public static class Layout {
