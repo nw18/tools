@@ -1,5 +1,6 @@
 package com.desktop;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -97,7 +98,7 @@ class LogCat extends JFrame{
 		}
 	};
 	
-	LogCat() {
+	LogCat(Component theQCode) {
 		//setUndecorated(true);
 		//getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
 		setTitle("TinyServer logging");
@@ -105,9 +106,13 @@ class LogCat extends JFrame{
 		setSize(800, 600);
 		setLayout(null);
 		setLocationRelativeTo(null);
-		listView = new JList<String>();
+		listView = new JList<>();
 		scrollPane = new JScrollPane();
 		scrollPane.getViewport().add(listView);
+		if(theQCode != null) {
+			listView.add(theQCode);
+			theQCode.setBounds(600,0,theQCode.getWidth(),theQCode.getHeight());
+		}
 		setContentPane(scrollPane);
 		listView.setModel(listModel);
 		logHandler.setLevel(Level.ALL);

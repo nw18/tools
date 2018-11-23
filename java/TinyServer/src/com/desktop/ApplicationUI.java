@@ -1,8 +1,10 @@
 package com.desktop;
 
-import java.awt.Panel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +13,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import com.google.zxing.WriterException;
 import com.newind.Application;
 import com.newind.util.InputUtil;
 import com.newind.util.InputUtil.ParameterException;
@@ -19,6 +25,8 @@ import com.newind.util.TextUtil;
 public class ApplicationUI extends JFrame{
 	private static final long serialVersionUID = 1L;
 	private static final String LAST_CONFIG = "./TinyServer.conf";
+	private static final int WIDTH0 = 100;
+	private static final int HEIGHT0 = 30;
 	private Application application;
 	private String[] config = new String[] {
 		"ip","0.0.0.0",
@@ -138,24 +146,62 @@ public class ApplicationUI extends JFrame{
 	JLabel makeLabel(String text,int x,int y){
 		JLabel label = new JLabel(text);
 		label.setVerticalAlignment(JLabel.CENTER);
-		pLast.set(x, y, 80, 30);
-		label.setBounds(x, y, 80, 30);
+		pLast.set(x, y, WIDTH0, HEIGHT0);
+		label.setBounds(x, y, WIDTH0, HEIGHT0);
 		return label;
 	}
+
+	JPanel makeImage(String url) {
+		try {
+			final Image barCodeImage = TextUtil.createQrCode(url,128);
+			JPanel panel =  new JPanel() {
+				@Override
+				public void paint(Graphics g) {
+					g.drawImage(barCodeImage,0,0,getWidth(),getHeight(),null);
+				}
+			};
+			panel.setBounds(0,0,barCodeImage.getWidth(null), barCodeImage.getHeight(null));
+			panel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    super.mouseClicked(e);
+                }
+            });
+			return  panel;
+		} catch (WriterException e) {
+			e.printStackTrace();
+		}
+		return  null;
+	}
+
+	JPanel theQRCode = null;
+	void updateQRCode(String url) {
+	    if(theQRCode != null) {
+	        this.remove(this.theQRCode);
+	        this.theQRCode = null;
+        }
+        this.theQRCode = makeImage(url);
+	    if(this.theQRCode != null) {
+	        this.theQRCode.setBounds(getWidth() - theQRCode.getWidth() - PADDING * 2 ,0,theQRCode.getWidth(),theQRCode.getHeight());
+            this.add(this.theQRCode);
+            this.theQRCode.revalidate();
+            this.theQRCode.repaint();
+        }
+    }
 	
 	void moveHalfShort(JComponent component,int x,int y){
-		pLast.set(x, y, 60, 30);
-		component.setBounds(x, y, 60, 30);
+		pLast.set(x, y, WIDTH0, HEIGHT0);
+		component.setBounds(x, y, WIDTH0, HEIGHT0);
 	}
 	
 	void moveShort(JComponent component,int x,int y){
-		pLast.set(x, y, 120, 30);
-		component.setBounds(x, y, 120, 30);
+		pLast.set(x, y, WIDTH0 * 2, HEIGHT0);
+		component.setBounds(x, y, WIDTH0 * 2, HEIGHT0);
 	}
 	
 	void moveLong(JComponent component,int x,int y){
-		pLast.set(x, y, 400, 30);
-		component.setBounds(x, y, 400, 30);
+		pLast.set(x, y, WIDTH0 * 4, HEIGHT0);
+		component.setBounds(x, y, WIDTH0 * 4, HEIGHT0);
 	}
 	
 	void moveNextLine(){
@@ -169,6 +215,46 @@ public class ApplicationUI extends JFrame{
 	ApplicationUI() {
 		//setUndecorated(true);
 		//getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+		Font font = new Font("宋体",Font.PLAIN,20);
+		UIManager.put("Button.font", font);
+		UIManager.put("CheckBox.font", font);
+		UIManager.put("CheckBoxMenuItem.acceleratorFont", font);
+		UIManager.put("CheckBoxMenuItem.font", font);
+		UIManager.put("ColorChooser.font", font);
+		UIManager.put("ComboBox.font", font);
+		UIManager.put("DesktopIcon.font", font);
+		UIManager.put("EditorPane.font", font);
+		UIManager.put("FormattedTextField.font", font);
+		UIManager.put("InternalFrame.titleFont", font);
+		UIManager.put("Label.font", font);
+		UIManager.put("List.font", font);
+		UIManager.put("Menu.acceleratorFont", font);
+		UIManager.put("Menu.font", font);
+		UIManager.put("MenuBar.font", font);
+		UIManager.put("MenuItem.acceleratorFont", font);
+		UIManager.put("MenuItem.font", font);
+		UIManager.put("OptionPane.font", font);
+		UIManager.put("Panel.font", font);
+		UIManager.put("PasswordField.font", font);
+		UIManager.put("PopupMenu.font", font);
+		UIManager.put("ProgressBar.font", font);
+		UIManager.put("RadioButton.font", font);
+		UIManager.put("RadioButtonMenuItem.acceleratorFont", font);
+		UIManager.put("RadioButtonMenuItem.font", font);
+		UIManager.put("ScrollPane.font", font);
+		UIManager.put("Spinner.font", font);
+		UIManager.put("TabbedPane.font", font);
+		UIManager.put("Table.font", font);
+		UIManager.put("TableHeader.font", font);
+		UIManager.put("TextArea.font", font);
+		UIManager.put("TextField.font", font);
+		UIManager.put("TextPane.font", font);
+		UIManager.put("TitledBorder.font", font);
+		UIManager.put("ToggleButton.font", font);
+		UIManager.put("ToolBar.font", font);
+		UIManager.put("ToolTip.font", font);
+		UIManager.put("Tree.font", font);
+		UIManager.put("Viewport.font", font);
 		setTitle("TinyServer");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JLabel label = null;
@@ -196,6 +282,7 @@ public class ApplicationUI extends JFrame{
 						@Override
 						public void actionPerformed(ActionEvent arg0) {
 							ipAddress.setText(ipStr);
+							updateQRCode("http://" + ipStr + ":" + httpPort.getText());
 						}
 					});;
 				}
@@ -208,6 +295,22 @@ public class ApplicationUI extends JFrame{
 		add(label);
 		moveShort(httpPort, pLast.right() + PADDING, pLast.y);
 		add(httpPort);
+		httpPort.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateQRCode("http://" + ipAddress.getText() + ":" + httpPort.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateQRCode("http://" + ipAddress.getText() + ":" + httpPort.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateQRCode("http://" + ipAddress.getText() + ":" + httpPort.getText());
+            }
+        });
 		label = makeLabel("ftp port:", pLast.right() + PADDING, pLast.y);
 		add(label);
 		moveShort(ftpPort, pLast.right() + PADDING, pLast.y);
@@ -254,6 +357,7 @@ public class ApplicationUI extends JFrame{
 		moveShort(buttonStart, pLast.right() + PADDING, pLast.y);
 		add(buttonStart);
 		setSize(Rect.MAX_RIGHT + PADDING * 2 + 20, Rect.MAX_BOTTOM + PADDING * 2 + 50);
+        updateQRCode("http://" + this.ipAddress.getText() + ":" + httpPort.getText());
 		buttonStart.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -356,7 +460,11 @@ public class ApplicationUI extends JFrame{
 	
 	void setup(){
 		try {
-			LogCat logCat = new LogCat();
+            if(this.theQRCode != null)
+            {
+                this.remove(this.theQRCode);
+            }
+			LogCat logCat = new LogCat(theQRCode);
 			application = new Application();
 			setVisible(true);
 			while(isShowing()){

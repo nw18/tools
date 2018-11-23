@@ -1,7 +1,7 @@
 package com.newind.net;
 
 public interface IServer<T> {
-    void start();
+    void start() throws Exception;
     void close();
     void join();
     void handleConnection(T connection);

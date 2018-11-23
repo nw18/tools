@@ -1,6 +1,6 @@
 package com.newind.desktop;
 
-import java.awt.Panel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -19,6 +19,8 @@ import com.newind.util.TextUtil;
 public class ApplicationUI extends JFrame{
 	private static final long serialVersionUID = 1L;
 	private static final String LAST_CONFIG = "./TinyServer.conf";
+	private static final int WIDTH0 = 90;
+	private static final int HEIGHT0 = 30;
 	private Application application;
 	private String[] config = new String[] {
 		"ip","0.0.0.0",
@@ -138,24 +140,24 @@ public class ApplicationUI extends JFrame{
 	JLabel makeLabel(String text,int x,int y){
 		JLabel label = new JLabel(text);
 		label.setVerticalAlignment(JLabel.CENTER);
-		pLast.set(x, y, 80, 30);
-		label.setBounds(x, y, 80, 30);
+		pLast.set(x, y, WIDTH0, HEIGHT0);
+		label.setBounds(x, y, WIDTH0, HEIGHT0);
 		return label;
 	}
 	
 	void moveHalfShort(JComponent component,int x,int y){
-		pLast.set(x, y, 60, 30);
-		component.setBounds(x, y, 60, 30);
+		pLast.set(x, y, WIDTH0, HEIGHT0);
+		component.setBounds(x, y, WIDTH0, HEIGHT0);
 	}
 	
 	void moveShort(JComponent component,int x,int y){
-		pLast.set(x, y, 120, 30);
-		component.setBounds(x, y, 120, 30);
+		pLast.set(x, y, WIDTH0 * 2, HEIGHT0);
+		component.setBounds(x, y, WIDTH0 * 2, HEIGHT0);
 	}
 	
 	void moveLong(JComponent component,int x,int y){
-		pLast.set(x, y, 400, 30);
-		component.setBounds(x, y, 400, 30);
+		pLast.set(x, y, WIDTH0 * 4, HEIGHT0);
+		component.setBounds(x, y, WIDTH0 * 4, HEIGHT0);
 	}
 	
 	void moveNextLine(){
@@ -169,6 +171,46 @@ public class ApplicationUI extends JFrame{
 	ApplicationUI() {
 		//setUndecorated(true);
 		//getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+		Font font = new Font("微软雅黑",Font.PLAIN,20);
+		UIManager.put("Button.font", font);
+		UIManager.put("CheckBox.font", font);
+		UIManager.put("CheckBoxMenuItem.acceleratorFont", font);
+		UIManager.put("CheckBoxMenuItem.font", font);
+		UIManager.put("ColorChooser.font", font);
+		UIManager.put("ComboBox.font", font);
+		UIManager.put("DesktopIcon.font", font);
+		UIManager.put("EditorPane.font", font);
+		UIManager.put("FormattedTextField.font", font);
+		UIManager.put("InternalFrame.titleFont", font);
+		UIManager.put("Label.font", font);
+		UIManager.put("List.font", font);
+		UIManager.put("Menu.acceleratorFont", font);
+		UIManager.put("Menu.font", font);
+		UIManager.put("MenuBar.font", font);
+		UIManager.put("MenuItem.acceleratorFont", font);
+		UIManager.put("MenuItem.font", font);
+		UIManager.put("OptionPane.font", font);
+		UIManager.put("Panel.font", font);
+		UIManager.put("PasswordField.font", font);
+		UIManager.put("PopupMenu.font", font);
+		UIManager.put("ProgressBar.font", font);
+		UIManager.put("RadioButton.font", font);
+		UIManager.put("RadioButtonMenuItem.acceleratorFont", font);
+		UIManager.put("RadioButtonMenuItem.font", font);
+		UIManager.put("ScrollPane.font", font);
+		UIManager.put("Spinner.font", font);
+		UIManager.put("TabbedPane.font", font);
+		UIManager.put("Table.font", font);
+		UIManager.put("TableHeader.font", font);
+		UIManager.put("TextArea.font", font);
+		UIManager.put("TextField.font", font);
+		UIManager.put("TextPane.font", font);
+		UIManager.put("TitledBorder.font", font);
+		UIManager.put("ToggleButton.font", font);
+		UIManager.put("ToolBar.font", font);
+		UIManager.put("ToolTip.font", font);
+		UIManager.put("Tree.font", font);
+		UIManager.put("Viewport.font", font);
 		setTitle("TinyServer");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JLabel label = null;
