@@ -2,9 +2,20 @@
 #include "win32base.h"
 
 CThread::CThread() 
-	:m_hThread(NULL)
+	:m_nThreadNum(1)
 {
 	m_bRunning = false;
+	memset(m_hThread, 0, sizeof(m_hThread));
+	memset(m_dwThreadID, 0, sizeof(m_dwThreadID));
+}
+
+CThread::CThread(int nNum)
+	: m_nThreadNum(nNum)
+{
+	assert(nNum > 0 && nNum <= sizeof(m_hThread)/sizeof(m_hThread[0]));
+	m_bRunning = false;
+	memset(m_hThread, 0, sizeof(m_hThread));
+	memset(m_dwThreadID, 0, sizeof(m_dwThreadID));
 }
 
 CThread::~CThread() 
@@ -62,20 +73,23 @@ BOOL CThread::SetupThread()
 BOOL CThread::_SetupThread(void *ptr)
 {
 	m_bRunning = true;
-	m_hThread = CreateThread(NULL, 0, CThread::_ThreadFunction, ptr, 0, &m_dwThreadID);
-	if (m_hThread == INVALID_HANDLE_VALUE)
+	for (int i = 0; i < m_nThreadNum; i++)
 	{
-		m_bRunning = false;
-		return FALSE;
+		m_hThread[i] = CreateThread(NULL, 0, CThread::_ThreadFunction, ptr, 0, &m_dwThreadID[i]);
+		if (m_hThread == INVALID_HANDLE_VALUE)
+		{
+			m_bRunning = false;
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
 
 void CThread::Join()
 {
-	if (m_hThread && m_hThread != INVALID_HANDLE_VALUE) 
+	if (m_hThread[0] && m_hThread[0] != INVALID_HANDLE_VALUE) 
 	{
-		WaitForSingleObject(m_hThread, INFINITE);
-		m_hThread = INVALID_HANDLE_VALUE;
+		WaitForMultipleObjects(m_nThreadNum, m_hThread, TRUE, INFINITE);
+		memset(m_hThread, 0, sizeof(m_hThread));
 	}
 }

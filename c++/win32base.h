@@ -37,6 +37,7 @@ public:
 	static Ptr safeSetup(CThread *pThread);
 
 	CThread();
+	CThread(int nNum);
 	virtual ~CThread();
 
 	void Join();
@@ -46,8 +47,9 @@ protected:
 	BOOL _SetupThread(void *ptr);
 	virtual void Run(void) = 0;
 
-	HANDLE m_hThread;
-	DWORD m_dwThreadID;
+	HANDLE m_hThread[10];
+	DWORD m_dwThreadID[10];
+	int m_nThreadNum;
 private:
 	bool m_bRunning;
 	static DWORD __stdcall _ThreadFunction(LPVOID pUser);
@@ -116,7 +118,9 @@ template<class T, class _Ptr = std::shared_ptr<T>>
 class CMessageThread : public CThread
 {
 public:
-	CMessageThread(DWORD dwTimeout = 1000)
+	CMessageThread(int nThreadNum = 1, int nQMax = 1024 ,DWORD dwTimeout = INFINITE)
+		:CThread(nThreadNum),
+		m_queue(nQMax)
 	{
 		m_bQuit = false;
 		m_dwTimeout = dwTimeout;
