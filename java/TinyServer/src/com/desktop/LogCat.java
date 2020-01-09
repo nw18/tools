@@ -1,10 +1,7 @@
 package com.desktop;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,7 +65,7 @@ class LogCat extends JFrame{
 			}
 		}
 	};
-	
+
 	Handler logHandler = new Handler() {
 		Date date = new Date(0);
 		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS",Locale.US);
@@ -98,7 +95,7 @@ class LogCat extends JFrame{
 		}
 	};
 	
-	LogCat(Component theQCode) {
+	LogCat(final Component theQCode) {
 		//setUndecorated(true);
 		//getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
 		setTitle("TinyServer logging");
@@ -106,12 +103,21 @@ class LogCat extends JFrame{
 		setSize(800, 600);
 		setLayout(null);
 		setLocationRelativeTo(null);
-		listView = new JList<>();
+		listView = new JList();
 		scrollPane = new JScrollPane();
 		scrollPane.getViewport().add(listView);
 		if(theQCode != null) {
 			listView.add(theQCode);
-			theQCode.setBounds(600,0,theQCode.getWidth(),theQCode.getHeight());
+			listView.addComponentListener(new ComponentAdapter() {
+				@Override
+				public void componentResized(ComponentEvent e) {
+					super.componentResized(e);
+					if (theQCode != null) {
+						theQCode.setBounds(getWidth() - theQCode.getWidth() - 10,0,theQCode.getWidth(),theQCode.getHeight());
+					}
+				}
+			});
+			theQCode.setBounds(getWidth() - theQCode.getWidth() - 10,0,theQCode.getWidth(),theQCode.getHeight());
 		}
 		setContentPane(scrollPane);
 		listView.setModel(listModel);
