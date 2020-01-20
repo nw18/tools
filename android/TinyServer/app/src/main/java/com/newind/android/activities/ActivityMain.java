@@ -2,12 +2,15 @@ package com.newind.android.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Environment;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
@@ -247,27 +250,59 @@ public class ActivityMain extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.bt_browse_path:
-                File file = Environment.getExternalStorageDirectory();
-                if (file == null || !file.exists()){
-                    Toast.makeText(this,"存储卡不可用",Toast.LENGTH_SHORT).show();
-                    break;
-                }
-                ActivityBrowse.start(this,file.getAbsolutePath(),1);
+                this.checkPermission(new Runnable() {
+                    @Override
+                    public void run() {
+                        File file = Environment.getExternalStorageDirectory();
+                        if (file == null || !file.exists()){
+                            Toast.makeText(ActivityMain.this,"存储卡不可用",Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        ActivityBrowse.start(ActivityMain.this,file.getAbsolutePath(),1);
+
+                    }
+                });
                 break;
             case R.id.bt_start:
-                try{
-                    checkConfigFrame();
-                    saveFrame2Config();
-                    ApplicationMain.getServer().startServer(config);
-                } catch (Exception e) {
-                    Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
-                    e.printStackTrace();
-                    break;
-                }
-                saveLast();
-                Intent it = new Intent(this,ActivityLogCat.class);
-                startActivity(it);
+                this.checkPermission(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            checkConfigFrame();
+                            saveFrame2Config();
+                            ApplicationMain.getServer().startServer(config);
+                        } catch (Exception e) {
+                            Toast.makeText(ActivityMain.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+                            e.printStackTrace();
+                            return;
+                        }
+                        saveLast();
+                        Intent it = new Intent(ActivityMain.this,ActivityLogCat.class);
+                        startActivity(it);
+                    }
+                });
                 break;
+        }
+    }
+
+    private Runnable mPermCallback = null;
+    private void checkPermission(Runnable callback) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            this.mPermCallback = callback;
+            this.requestPermissions(new String[] { "android.permission.WRITE_EXTERNAL_STORAGE" , "android.permission.READ_EXTERNAL_STORAGE" },  100);
+        }else {
+            callback.run();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100) {
+            if(this.mPermCallback != null) {
+                Log.d("result", String.format("%d %d", grantResults[0], grantResults[1]));
+                this.mPermCallback.run();
+            }
         }
     }
 }

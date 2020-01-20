@@ -13,6 +13,7 @@ public class ApplicationMain extends Application {
     private static com.newind.Application server;
     @Override
     public void onCreate() {
+        super.onCreate();
         LogManager.disableLogFile();
         ActivityLogCat.init();
     }
