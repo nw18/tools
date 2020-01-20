@@ -82,7 +82,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		while (byteBuffer.limit() > 1) {
 			int ch = inputStream.read();
 			if (ch < 0){
-				throw new IOException("stream end.");
+				return  null;
 			}
 			if(ch == '\r'){
 				byteBuffer.put((byte)ch);
@@ -106,11 +106,12 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	public void handle(Socket param) {
 		try {
 			attachTo(param);
-			long last_recv_time = System.currentTimeMillis();
+			long last_rec_time = System.currentTimeMillis();
 			sendResponse(FtpResponse.OK_SERVER_READY);
 			while (true) {
 				try {
 					String cmdString = readLine();
+					if(cmdString == null) break; //end of stream return null
 					FtpCommand ftpCmd = new FtpCommand();
 					logger.info(cmdString);
 					ftpCmd.parse(cmdString);
@@ -126,7 +127,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 					if (config.isShuttingDown()) {
 						break;
 					}
-					if (System.currentTimeMillis() - last_recv_time > config.getConnectionTimeout()) {
+					if (System.currentTimeMillis() - last_rec_time > config.getConnectionTimeout()) {
 						logger.info("connection timeout:" + param.getRemoteSocketAddress());
 						break;
 					}
