@@ -20,7 +20,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="20dp"
             android:drawablePadding="5dp"
-            android:drawableTop="@mipmap/logo"
+            android:drawableTop="@mipmap/ic_launcher"
             android:text="version information" />
 
         <TextView

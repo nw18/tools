@@ -114,7 +114,7 @@ public class ActivityLogCat extends AppCompatActivity {
         Intent it = new Intent(this,ActivityNull.class);
         Notification notification = builder.setContentTitle(getResources().getString(R.string.app_name))
                 .setContentText(ApplicationMain.getServer().getServerAddresses().replace("///","//"))
-                .setSmallIcon(R.mipmap.logo)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setWhen(System.currentTimeMillis())
                 .setPriority(Notification.PRIORITY_DEFAULT)
                 .setContentIntent(PendingIntent.getActivity(this,1,it,PendingIntent.FLAG_UPDATE_CURRENT))

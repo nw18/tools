@@ -65,7 +65,7 @@ public class Application {
 			if (!TextUtil.isEmpty(addr)) {
 				addr += "\n";
 			}
-			addr += "ftp://" + httpServer.getAddress();
+			addr += "ftp://" + ftpServer.getAddress();
 		}
 		return addr;
 	}

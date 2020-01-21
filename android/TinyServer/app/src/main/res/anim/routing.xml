@@ -7,7 +7,7 @@
         android:fromDegrees="0"
         android:pivotX="50%"
         android:pivotY="50%"
-        android:toDegrees="1800"></rotate>
+        android:toDegrees="1080"></rotate>
     <scale
         android:fromXScale="40dp"
         android:fromYScale="40dp"
