@@ -10,7 +10,7 @@
     <string name="sw_ftp_off">禁用FTP</string>
     <string name="sw_json_mode_on">AJAX模式</string>
     <string name="sw_json_mode_off">HTML模式</string>
-    <string name="sw_ftp_writable_on">FTP可写</string>
+    <string name="sw_ftp_writable_on">FTP可写!!慎用!!</string>
     <string name="sw_ftp_writable_off">FTP只读</string>
     <string name="et_path_hint">共享路径</string>
     <string name="bt_browse_path">选择</string>
