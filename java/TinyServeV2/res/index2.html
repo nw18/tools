@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="/favicon.ico" type="image/x-icon" rel=icon>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>TinyServer</title>
+<style>
+a{{font-size:100%}}
+table {
+    width: 1024px;
+    background-color: #f2f2f2
+}
+th {
+    color: #333333;
+    background-color: #e5e5e5;
+table {
+    width: 1024px;
+    width: 1024px;
+    background-color: #f2f2f2
+}
+th {
+    color: #333333;
+    background-color: #e5e5e5;
+    font-size: 100%;
+    font-weight: bold;
+}
+div{
+	width: 1024px;
+}
+</style>
+<script type="text/javascript" src="/jquery-1.12.4.min.js"></script>
+<script type="text/javascript">
+function GoTo(url){
+    $.getJSON(url,{},function(result,status,xhr){
+        $("#upform").attr("action",result.parent.substring(0,result.parent.length - 3));
+        $("#parent").attr("href","javascript:GoTo('" + result.parent + "')");
+        $("#content tr:gt(0)").remove();
+        var parent = result.parent.substring(0,result.parent.length-2);
+        for(var i = 0; i < result.data.length; i++){
+            var line = result.data[i];
+            var date = new Date();
+            date.setTime(line[3]);
+            line[3] = date.toLocaleString();
+            if (line[0] == 1) {
+                line[0] = "D";
+                line[1] = "<a href=\"javascript:GoTo('" + parent + line[1] + "')\">" + line[1] + "</a>";
+            }else {
+                line[0] = "F";
+                line[1] = "<a href=\"" + parent + line[1] + "\" target=\"_blank\">" + line[1] + "</a>";
+            }
+            $("#content").append("<tr><td>" + line.join("</td><td>") + "</td></tr>");
+        }
+        //make the path links
+        $("#path").empty();
+        var pathAry = parent.split("/");
+        $("#path").append("<a href=\"javascript:GoTo('/')\">根目录</a>");
+        var path = "";
+        for(var i = 0; i < pathAry.length; i++){
+        	var dir = pathAry[i];
+        	if(dir == ""){
+        		continue;
+        	}
+        	$("#path").append("/");
+        	path += "/" + dir;
+        	$("#path").append("<a href=\"javascript:GoTo('" + path + "')\">" + dir + "</a>");
+        }
+        window.scrollTo(0, 0);
+    });
+};
+$(document).ready(function(){
+    GoTo("/");
+});
+</script>
+</head><body>
+<div id="path">
+</div>
+<table id="content">
+<tr>
+    <th><a id="parent" href="">上级</a></th>
+    <th>名称</th>
+    <th>大小</th>
+    <th>时间</th>
+</tr>
+</table>
+<form id="upform" method="post" enctype="multipart/form-data">
+    <input name="upload" type="file"/> <input type="submit" value="upload"/>
+</form>
+</body></html>
