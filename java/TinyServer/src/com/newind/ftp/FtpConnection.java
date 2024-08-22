@@ -106,7 +106,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 	public void handle(Socket param) {
 		try {
 			attachTo(param);
-			long last_rec_time = System.currentTimeMillis();
+			long last_recv_time = System.currentTimeMillis();
 			sendResponse(FtpResponse.OK_SERVER_READY);
 			while (true) {
 				try {
@@ -127,7 +127,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 					if (config.isShuttingDown()) {
 						break;
 					}
-					if (System.currentTimeMillis() - last_rec_time > config.getConnectionTimeout()) {
+					if (System.currentTimeMillis() - last_recv_time > config.getConnectionTimeout()) {
 						logger.info("connection timeout:" + param.getRemoteSocketAddress());
 						break;
 					}
@@ -285,7 +285,11 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			sendResponse(FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER);
 		}
 	}
-	
+
+	void onXPwd(FtpCommand cmd) throws IOException{
+		this.onPwd(cmd);
+	}
+
 	void onPwd(FtpCommand cmd) throws IOException{
 		if (workStatus != WorkStatus.LogOn) {
 			sendResponse(FtpResponse.ERR_NOT_LOGIN);
@@ -297,6 +301,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			curPath = "/";
 		}else {			
 			curPath = curPath.replace('\\', '/');
+			// in d:\ case, will lose the / seprator.
+			if (!curPath.startsWith("/")) {
+				curPath = "/" + curPath;
+			}
 		}
 		sendResponse(String.format(FtpResponse.OK_FILE_CREATED, curPath));
 	}

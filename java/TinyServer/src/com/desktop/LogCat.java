@@ -28,13 +28,13 @@ class LogCat extends JFrame{
 	private static final long serialVersionUID = 1L;
 	JList<String> listView;
 	JScrollPane scrollPane;
-	LinkedList<String> listData = new LinkedList<>();
+	final LinkedList<String> listData = new LinkedList<>();
 	int removeCount = 0;
 	int addingCount = 0;
-	LinkedList<String> listCache = new LinkedList<>();
-	List<ListDataListener> listeners = new ArrayList<>();
+	final LinkedList<String> listCache = new LinkedList<>();
+	final List<ListDataListener> listeners = new ArrayList<>();
 	Timer refreshTimer;
-	ListModel<String> listModel = new ListModel<String>() {
+	ListModel<String> listModel = new ListModel<>() {
 		@Override
 		public void addListDataListener(ListDataListener l) {
 			synchronized (listeners) {
@@ -67,8 +67,8 @@ class LogCat extends JFrame{
 	};
 
 	Handler logHandler = new Handler() {
-		Date date = new Date(0);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS",Locale.US);
+		final Date date = new Date(0);
+		final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS",Locale.US);
 		@Override
 		public void publish(LogRecord record) {
 			synchronized (listCache) {
@@ -77,7 +77,7 @@ class LogCat extends JFrame{
 					removeCount ++;
 				}
 				date.setTime(record.getMillis());
-				listCache.add(String.format("%06d %s %s",record.getThreadID(),dateFormat.format(date),record.getMessage()));
+				listCache.add(String.format("%06d %s %s",record.getLongThreadID(),dateFormat.format(date),record.getMessage()));
 				addingCount++;
 			}
 		}
@@ -103,7 +103,7 @@ class LogCat extends JFrame{
 		setSize(800, 600);
 		setLayout(null);
 		setLocationRelativeTo(null);
-		listView = new JList();
+		listView = new JList<>();
 		scrollPane = new JScrollPane();
 		scrollPane.getViewport().add(listView);
 		if(theQCode != null) {
@@ -112,9 +112,7 @@ class LogCat extends JFrame{
 				@Override
 				public void componentResized(ComponentEvent e) {
 					super.componentResized(e);
-					if (theQCode != null) {
-						theQCode.setBounds(getWidth() - theQCode.getWidth() - 10,0,theQCode.getWidth(),theQCode.getHeight());
-					}
+					theQCode.setBounds(getWidth() - theQCode.getWidth() - 10,0,theQCode.getWidth(),theQCode.getHeight());
 				}
 			});
 			theQCode.setBounds(getWidth() - theQCode.getWidth() - 10,0,theQCode.getWidth(),theQCode.getHeight());
@@ -130,11 +128,8 @@ class LogCat extends JFrame{
 				if(hasNewData){
 					scrollEnd(); //scroll with a delay period.
 				}
-				if(syncData()){
-					hasNewData = true;
-				}else {
-					hasNewData = false;
-				}
+
+				hasNewData = syncData();
 			}
 		});
 		addWindowListener(new WindowListener() {
@@ -181,8 +176,8 @@ class LogCat extends JFrame{
 	}
 	
 	boolean syncData(){
-		int removeCount = 0;
-		int addingCount = 0;
+		int removeCount;
+		int addingCount;
 		synchronized (listData) {
 			synchronized (listCache) {
 				removeCount = this.removeCount;

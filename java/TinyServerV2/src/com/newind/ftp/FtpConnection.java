@@ -82,7 +82,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 		while (byteBuffer.limit() > 1) {
 			int ch = inputStream.read();
 			if (ch < 0){
-				throw new IOException("stream end.");
+				return  null;
 			}
 			if(ch == '\r'){
 				byteBuffer.put((byte)ch);
@@ -111,6 +111,7 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			while (true) {
 				try {
 					String cmdString = readLine();
+					if(cmdString == null) break; //end of stream return null
 					FtpCommand ftpCmd = new FtpCommand();
 					logger.info(cmdString);
 					ftpCmd.parse(cmdString);
@@ -284,7 +285,11 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			sendResponse(FtpResponse.ERR_COMMAND_NOT_IMPLEMENT_PARAMETER);
 		}
 	}
-	
+
+	void onXPwd(FtpCommand cmd) throws IOException{
+		this.onPwd(cmd);
+	}
+
 	void onPwd(FtpCommand cmd) throws IOException{
 		if (workStatus != WorkStatus.LogOn) {
 			sendResponse(FtpResponse.ERR_NOT_LOGIN);
@@ -296,6 +301,10 @@ public class FtpConnection implements PoolingWorker<Socket>,Callback {
 			curPath = "/";
 		}else {			
 			curPath = curPath.replace('\\', '/');
+			// in d:\ case, will lose the / seprator.
+			if (!curPath.startsWith("/")) {
+				curPath = "/" + curPath;
+			}
 		}
 		sendResponse(String.format(FtpResponse.OK_FILE_CREATED, curPath));
 	}

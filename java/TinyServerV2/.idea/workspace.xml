@@ -5,11 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bff6cfcd-a3f6-46fd-ae35-29088ce91e9d" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/../TinyServer/.idea/dictionaries/newind.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../TinyServer/.idea/eclipseCodeFormatter.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../TinyServer/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../android/TinyServer/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../android/TinyServer/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../android/TinyServer/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../android/TinyServer/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../android/TinyServer/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../android/TinyServer/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../android/TinyServer/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../android/TinyServer/.idea/runConfigurations.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../TinyServer/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../TinyServer/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../TinyServer/.project" beforeDir="false" afterPath="$PROJECT_DIR$/../TinyServer/.project" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../TinyServer/TinyServer.conf" beforeDir="false" afterPath="$PROJECT_DIR$/../TinyServer/TinyServer.conf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../TinyServer/src/com/newind/ftp/FtpCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/../TinyServer/src/com/newind/ftp/FtpCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../TinyServer/src/com/newind/ftp/FtpConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/../TinyServer/src/com/newind/ftp/FtpConnection.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/newind/ftp/FtpCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/newind/ftp/FtpCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/newind/ftp/FtpConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/newind/ftp/FtpConnection.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -176,12 +186,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "D:/Code/tools/java/TinyServerV2"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Code/tools/java/TinyServerV2&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration default="true" type="Applet">
       <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
