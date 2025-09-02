@@ -198,7 +198,7 @@ public class FtpCommand {
         if (null == cmdParaList) {
             return null;
         }
-        return cmdParaList.toArray(null);
+        return cmdParaList.toArray(new String[cmdParaList.size()]);
     }
 
     public String getParam(int index) {

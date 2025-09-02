@@ -79,7 +79,7 @@ class LogCat extends JFrame{
 					removeCount ++;
 				}
 				date.setTime(record.getMillis());
-				listCache.add(String.format("%06d %s %s",record.getThreadID(),dateFormat.format(date),record.getMessage()));
+				listCache.add(String.format("%06d %s %s",record.getLongThreadID(),dateFormat.format(date),record.getMessage()));
 				addingCount++;
 			}
 		}
